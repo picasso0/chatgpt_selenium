@@ -17,7 +17,6 @@ app = FastAPI()
 
 @app.post("/chat/")
 async def chat(question:str=Query("")):
-    breakpoint()
     if question==None or question=="":
         return "enter a message"
 
