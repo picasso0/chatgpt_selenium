@@ -100,7 +100,15 @@ class ChatGPTAutomator:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = webdriver.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
         return driver
-
+    
+    def create_new_chat(self):
+        try:
+            WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")))
+            button = self.driver.find_element(By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")
+            button.click()
+        except:
+            pass
+    
     def talk_to_chatgpt(self, prompt, to_list=False, to_csv=False, new_chat=False):
         if new_chat:
             try:
@@ -138,6 +146,7 @@ class ChatGPTAutomator:
         except:
             time.sleep(self.wait_sec)
             return
+    
     def return_chatgpt_conversation(self):
         return self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
 
@@ -164,6 +173,7 @@ class ChatGPTAutomator:
                 return ""
         except:
             return ""
+    
     def return_last_table(self, to_csv):
         def quote_field(field):
             if ',' in field or '\n' in field:
@@ -226,6 +236,7 @@ class ChatGPTAutomator:
         except:
             time.sleep(2)
         return
+    
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
         print("Closing the browser...")
