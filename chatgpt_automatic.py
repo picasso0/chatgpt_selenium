@@ -130,9 +130,10 @@ class ChatGPTAutomator:
             input_btn.click()
         except:
             pass
-        time.sleep(self.wait_sec)
+        # time.sleep(self.wait_sec)
+        time.sleep(1)
         try:
-            WebDriverWait(self.driver, self.wait_sec).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form button>[data-state=\"closed\"]")))
+            # WebDriverWait(self.driver, self.wait_sec).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form button>[data-state=\"closed\"]")))
             WebDriverWait(self.driver, self.wait_sec).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
         except:
             time.sleep(self.wait_sec)
