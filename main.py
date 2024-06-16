@@ -8,12 +8,7 @@ from time import sleep
 
 chatgpt = ChatGPTAutomator()
 
-
-
-
-
 app = FastAPI()
-
 
 @app.post("/chat/")
 async def chat(question:str=Query("")):
