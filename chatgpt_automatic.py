@@ -26,7 +26,8 @@ class ChatGPTAutomator:
         ssl._create_default_https_context = ssl._create_unverified_context
         self.chrome_path = chrome_path if chrome_path else self.get_chrome_path()
         # self.chrome_driver_path = ChromeDriverManager().install()
-        self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
+        # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
+        self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/126.0.6478.61/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
 
         self.wait_sec = wait_sec
@@ -37,8 +38,8 @@ class ChatGPTAutomator:
         url = "https://chat.openai.com"
         free_port = self.find_available_port()
         self.start_remote_chrome(free_port, url)
-        self.wait_for_human_verification()
         self.driver = self.setup_webdriver(free_port)
+        self.wait_for_human_verification()
         self.driver.get(url)
         try:
             time.sleep(3)
@@ -214,30 +215,44 @@ class ChatGPTAutomator:
                 return self.return_last_response()
         
     def wait_for_human_verification(self):
-        if not self.login_check:
+        while(True):
             try:
-                WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
+                try:
+                    WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
+                    print("human verification passed")
+                    return 1
+                except:
+                    WebDriverWait(self.driver, 10).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe[title='Widget containing a Cloudflare security challenge']")))
+                    WebDriverWait(self.driver, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label.ctp-checkbox-label"))).click()
             except:
-                time.sleep(2)
-            return
-        print("Please complete the login or human verification steps if required.")
-        while True:
-            user_input = input(
-                "Press 'y' once you've finished the login or human verification, or 'n' to review again:").lower()
+                print("human verification faild")
+                pass
+        # OLD
+        
+        # if not self.login_check:
+        #     try:
+        #         WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
+        #     except:
+        #         time.sleep(2)
+        #     return
+        # print("Please complete the login or human verification steps if required.")
+        # while True:
+        #     user_input = input(
+        #         "Press 'y' once you've finished the login or human verification, or 'n' to review again:").lower()
 
-            if user_input == 'y':
-                print("Proceeding with the automated steps...")
-                break
-            elif user_input == 'n':
-                print("Please finish the human verification. Waiting for completion...")
-                time.sleep(5)  # You can adjust the waiting time as needed
-            else:
-                print("Incorrect input. Please enter 'y' or 'n'.")
-        try:
-            WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
-        except:
-            time.sleep(2)
-        return
+        #     if user_input == 'y':
+        #         print("Proceeding with the automated steps...")
+        #         break
+        #     elif user_input == 'n':
+        #         print("Please finish the human verification. Waiting for completion...")
+        #         time.sleep(5)  # You can adjust the waiting time as needed
+        #     else:
+        #         print("Incorrect input. Please enter 'y' or 'n'.")
+        # try:
+        #     WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
+        # except:
+        #     time.sleep(2)
+        # return
     
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
