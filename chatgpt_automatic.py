@@ -22,7 +22,6 @@ class ChatGPTAutomator:
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
-        breakpoint()
         ssl._create_default_https_context = ssl._create_unverified_context
         self.chrome_path = chrome_path if chrome_path else self.get_chrome_path()
         # self.chrome_driver_path = ChromeDriverManager().install()
