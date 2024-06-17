@@ -22,10 +22,12 @@ class ChatGPTAutomator:
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
+        breakpoint()
         ssl._create_default_https_context = ssl._create_unverified_context
         self.chrome_path = chrome_path if chrome_path else self.get_chrome_path()
         # self.chrome_driver_path = ChromeDriverManager().install()
-        self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
+        self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
+        # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
 
         self.wait_sec = wait_sec
         self.login_check = login_check
