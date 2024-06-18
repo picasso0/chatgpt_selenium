@@ -14,16 +14,18 @@ import os
 import sys
 import ssl
 import json
+from shutil import copytree, rmtree
 from io import StringIO
 
 class ChatGPTAutomator:
 
-    def __init__(self, login_check=True, wait_sec=60, driver_path=None, chrome_path=None):
+    def __init__(self,user_id, login_check=True, wait_sec=60, driver_path=None, chrome_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
         self.chrome_path = chrome_path if chrome_path else self.get_chrome_path()
+        self.user_id = user_id
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
         self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/126.0.6478.61/chromedriver'
@@ -36,7 +38,7 @@ class ChatGPTAutomator:
 
         url = "https://chat.openai.com"
         free_port = self.find_available_port()
-        self.start_remote_chrome(free_port, url)
+        self.start_remote_chrome(free_port, url, user_id)
         self.driver = self.setup_webdriver(free_port)
         self.wait_for_human_verification()
         self.driver.get(url)
@@ -76,9 +78,10 @@ class ChatGPTAutomator:
             return s.getsockname()[1]
 
     def start_remote_chrome(self, port, url):
+        copytree('remote-profile',f'remote-profile_{self.user_id}')
         def open_chrome():
-            profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "remote-profile") if sys.platform == "win32" else "remote-profile" 
-            chrome_cmd = f"{self.chrome_path} --remote-debugging-port={port} --user-data-dir={profile_dir} {url}"
+            profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'remote-profile_{self.user_id}') if sys.platform == "win32" else f'remote-profile_{self.user_id}' 
+            chrome_cmd = f"{self.chrome_path} --new-window --remote-debugging-port={port} --user-data-dir={profile_dir} {url}"
             os.system(chrome_cmd)
 
         self.chrome_thread = threading.Thread(target=open_chrome)
@@ -86,6 +89,10 @@ class ChatGPTAutomator:
 
     def setup_webdriver(self, port):
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
@@ -214,6 +221,7 @@ class ChatGPTAutomator:
                 return self.return_last_response()
         
     def wait_for_human_verification(self):
+        breakpoint()
         while(True):
             try:
                 try:
@@ -255,6 +263,8 @@ class ChatGPTAutomator:
     
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
+        print("removing remote profile")
+        rmtree(f'remote-profile_{self.user_id}')
         print("Closing the browser...")
         self.driver.close()
         print("driver.close()")
