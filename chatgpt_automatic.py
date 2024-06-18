@@ -221,7 +221,6 @@ class ChatGPTAutomator:
                 return self.return_last_response()
         
     def wait_for_human_verification(self):
-        breakpoint()
         while(True):
             try:
                 try:
