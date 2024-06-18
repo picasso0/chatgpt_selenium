@@ -38,7 +38,7 @@ class ChatGPTAutomator:
 
         url = "https://chat.openai.com"
         free_port = self.find_available_port()
-        self.start_remote_chrome(free_port, url, user_id)
+        self.start_remote_chrome(free_port, url)
         self.driver = self.setup_webdriver(free_port)
         self.wait_for_human_verification()
         self.driver.get(url)
@@ -269,5 +269,3 @@ class ChatGPTAutomator:
         print("driver.close()")
         self.driver.quit()
         print("driver.quit()")
-        sys.exit()
-        print("sys.exit()")
