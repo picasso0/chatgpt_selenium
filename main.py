@@ -88,9 +88,9 @@ async def chat(current_user: dict = Depends(get_current_user), question:str=Quer
 
 
 @app.post("/quit/")
-async def quit(current_user: dict = Depends(get_current_user), question:str=Query()):
+async def quit(current_user: dict = Depends(get_current_user)):
     user_id = str(current_user.get('_id'))
     chatgpt = user_chatgpt_session_manager.get_session(user_id)
     chatgpt.quit()
-    return {"msg":"chatgpt session deleted"}
+    return {"msg":"chatgpt session quited"}
 
