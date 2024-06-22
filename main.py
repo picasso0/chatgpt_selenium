@@ -1,5 +1,5 @@
 from chatgpt_automatic import ChatGPTAutomator
-from fastapi import FastAPI, HTTPException, Header,Query, Depends
+from fastapi import FastAPI, HTTPException, Header,Query, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -10,15 +10,17 @@ from auth import (
     Token,
     UserInRequest,
     oauth2_scheme,
-    HTTPException
+    HTTPException,
+    BaseModel
 )
 from db import get_database
-
 
 async def get_db_instance():
     database = await get_database()
     return database
 
+class Question(BaseModel):
+    question: str
 
 app = FastAPI()
 origins = ["*"]
@@ -82,15 +84,18 @@ async def create_chatgpt_session(current_user: dict = Depends(get_current_user))
     
 
 @app.post("/chat/")
-async def chat(current_user: dict = Depends(get_current_user), question:str=Query()):
-    if question==None or question=="":
+async def chat(current_user: dict = Depends(get_current_user), input: Question=Body()):
+    if input.question==None or input.question=="":
         return "enter a message"
     user_id = str(current_user.get('_id'))
     chatgpt = user_chatgpt_session_manager.get_session(user_id)
-    chatgpt.send_prompt_to_chatgpt(question)
-    answer = chatgpt.return_last_response()
+    if chatgpt:
+        chatgpt.send_prompt_to_chatgpt(input.question)
+        answer = chatgpt.return_last_response()
 
-    return {"answer":answer}
+        return {"answer":answer}
+    else:
+        return {"answer":"you dont have any chatgpt session ."}
 
 
 @app.post("/quit/")
