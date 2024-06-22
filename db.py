@@ -1,7 +1,7 @@
 import motor.motor_asyncio
+from global_vars import MONGODB_URL
 
 async def get_database():
-    client = motor.motor_asyncio.AsyncIOMotorClient(
-        "mongodb://77.238.108.86:27000/log?retryWrites=true&w=majority")
+    client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
     db = client.chatgpt
     return db
