@@ -1,4 +1,3 @@
-from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support.ui import WebDriverWait
@@ -6,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 # import chromedriver_autoinstaller
 from webdriver_manager.chrome import ChromeDriverManager
+import undetected_chromedriver as uc
 from pathlib import Path
 import time
 import socket
@@ -24,7 +24,6 @@ class ChatGPTAutomator:
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
-        self.chrome_path = chrome_path if chrome_path else self.get_chrome_path()
         self.user_id = user_id
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
@@ -36,12 +35,16 @@ class ChatGPTAutomator:
 
         self.chrome_thread = None
 
-        url = "https://chat.openai.com"
+        try:
+            rmtree(f'remote-profile_{self.user_id}')
+        except:
+            pass
+        
         free_port = self.find_available_port()
-        self.start_remote_chrome(free_port, url)
         self.driver = self.setup_webdriver(free_port)
-        self.wait_for_human_verification()
+        url = "https://chat.openai.com"
         self.driver.get(url)
+        self.wait_for_human_verification()
         try:
             time.sleep(3)
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
@@ -53,23 +56,6 @@ class ChatGPTAutomator:
         except:
             time.sleep(5)
 
-    def get_chrome_path(self):
-        platform = sys.platform
-        if platform == "win32":
-            # Usually located at this path on Windows
-            possible_paths = [
-                r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"',
-                r'"C:\Program Files\Google\Chrome\Application\chrome.exe"'
-            ]
-            chrome_path = possible_paths[0] if os.path.exists(possible_paths[0].strip("\"")) else possible_paths[1]
-        elif platform == "darwin":
-            # Usually located at this path on macOS
-            chrome_path = "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-        else:
-            # On Linux, 'google-chrome' is usually available in the PATH.
-            chrome_path = "google-chrome"
-        
-        return chrome_path
 
     def find_available_port(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -88,7 +74,8 @@ class ChatGPTAutomator:
         self.chrome_thread.start()
 
     def setup_webdriver(self, port):
-        chrome_options = webdriver.ChromeOptions()
+        copytree('remote-profile',f'remote-profile_{self.user_id}')
+        chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--start-maximized")
@@ -96,21 +83,22 @@ class ChatGPTAutomator:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")
+        chrome_options.add_argument(f"--user-data-dir=remote-profile_{self.user_id}");
         try:
-            driver = webdriver.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options)
+            driver = uc.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options)
         except TypeError:
             try:
-                driver = webdriver.Chrome(executable_path=self.chrome_driver_path, options=chrome_options)
+                driver = uc.Chrome(executable_path=self.chrome_driver_path, options=chrome_options)
             except:
                 if (Path.cwd() / self.chrome_driver_path).exists():
-                    driver = webdriver.Chrome(executable_path=str(Path.cwd() / self.chrome_driver_path), options=chrome_options)
+                    driver = uc.Chrome(executable_path=str(Path.cwd() / self.chrome_driver_path), options=chrome_options)
         except:
             if (Path.cwd() / self.chrome_driver_path).exists():
-                driver = webdriver.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
+                driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
         return driver
     
     def create_new_chat(self):
+        
         try:
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")))
             button = self.driver.find_element(By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")
