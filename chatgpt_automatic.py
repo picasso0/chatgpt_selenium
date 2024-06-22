@@ -3,15 +3,11 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-# import chromedriver_autoinstaller
 from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
 from pathlib import Path
 import time
-import socket
-import threading
 import os
-import sys
 import ssl
 import json
 from shutil import copytree, rmtree
