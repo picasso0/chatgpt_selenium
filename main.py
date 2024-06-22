@@ -41,9 +41,12 @@ class UserChatGPTSessionManager:
             return None
 
     def create_session(self, user_id: int):
-        session = ChatGPTAutomator(user_id)
-        self.chatgpt_sessions[user_id] = session
-        return session
+        try:
+            session = ChatGPTAutomator(user_id)
+            self.chatgpt_sessions[user_id] = session
+            return session
+        except:
+            return None
 
     def delete_session(self, user_id: int):
         if user_id in self.chatgpt_sessions:
@@ -70,6 +73,9 @@ async def login_for_access_token(input: UserInRequest):
 
 @app.get("/create_chatgpt_session")
 async def create_chatgpt_session(current_user: dict = Depends(get_current_user)):
+    existed_session=user_chatgpt_session_manager.get_session(str(current_user.get('_id')))
+    if existed_session:
+        return existed_session
     user_id = str(current_user.get('_id'))
     user_chatgpt_session_manager.create_session(user_id)
     return {"msg":"chatgpt session created"}
