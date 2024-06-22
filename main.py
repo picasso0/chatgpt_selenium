@@ -1,62 +1,24 @@
-from chatgpt_automatic import ChatGPTAutomator
 from fastapi import FastAPI, HTTPException, Header,Query, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from schemas import UserInRequest, Token, Question
+from chatgpt_manager import user_chatgpt_session_manager
 from auth import (
     authenticate_user,
     create_access_token,
     get_current_user,
     Token,
-    UserInRequest,
-    oauth2_scheme,
     HTTPException,
-    BaseModel
 )
-from db import get_database
-
-async def get_db_instance():
-    database = await get_database()
-    return database
-
-class Question(BaseModel):
-    question: str
 
 app = FastAPI()
 origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
-
-class UserChatGPTSessionManager:
-    def __init__(self):
-        self.chatgpt_sessions = {}
-
-    def get_session(self, user_id: int):
-        if user_id in self.chatgpt_sessions:
-            return self.chatgpt_sessions[user_id]
-        else:
-            return None
-
-    def create_session(self, user_id: int):
-        try:
-            session = ChatGPTAutomator(user_id)
-            self.chatgpt_sessions[user_id] = session
-            return session
-        except:
-            return None
-
-    def delete_session(self, user_id: int):
-        if user_id in self.chatgpt_sessions:
-            self.chatgpt_sessions[user_id].quit()
-            del self.chatgpt_sessions[user_id]
-
-user_chatgpt_session_manager = UserChatGPTSessionManager()
-
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(input: UserInRequest):
