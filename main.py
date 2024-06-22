@@ -75,7 +75,7 @@ async def login_for_access_token(input: UserInRequest):
 async def create_chatgpt_session(current_user: dict = Depends(get_current_user)):
     existed_session=user_chatgpt_session_manager.get_session(str(current_user.get('_id')))
     if existed_session:
-        return existed_session
+        return {"msg":"chatgpt session created before"}
     user_id = str(current_user.get('_id'))
     user_chatgpt_session_manager.create_session(user_id)
     return {"msg":"chatgpt session created"}

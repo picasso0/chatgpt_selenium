@@ -19,7 +19,7 @@ from io import StringIO
 
 class ChatGPTAutomator:
 
-    def __init__(self,user_id, login_check=True, wait_sec=60, driver_path=None, chrome_path=None):
+    def __init__(self,user_id, login_check=True, wait_sec=60, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -40,8 +40,7 @@ class ChatGPTAutomator:
         except:
             pass
         
-        free_port = self.find_available_port()
-        self.driver = self.setup_webdriver(free_port)
+        self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
         self.driver.get(url)
         self.wait_for_human_verification()
@@ -57,23 +56,7 @@ class ChatGPTAutomator:
             time.sleep(5)
 
 
-    def find_available_port(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            return s.getsockname()[1]
-
-    def start_remote_chrome(self, port, url):
-        copytree('remote-profile',f'remote-profile_{self.user_id}')
-        def open_chrome():
-            profile_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'remote-profile_{self.user_id}') if sys.platform == "win32" else f'remote-profile_{self.user_id}' 
-            chrome_cmd = f"{self.chrome_path} --new-window --remote-debugging-port={port} --user-data-dir={profile_dir} {url}"
-            os.system(chrome_cmd)
-
-        self.chrome_thread = threading.Thread(target=open_chrome)
-        self.chrome_thread.start()
-
-    def setup_webdriver(self, port):
+    def setup_webdriver(self):
         copytree('remote-profile',f'remote-profile_{self.user_id}')
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
@@ -98,7 +81,6 @@ class ChatGPTAutomator:
         return driver
     
     def create_new_chat(self):
-        
         try:
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")))
             button = self.driver.find_element(By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")
