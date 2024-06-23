@@ -30,7 +30,7 @@ async def get_current_bot(token: str = Depends(oauth2_scheme)):
     db = await get_database()
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="توکن شما منقضی شده است",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
