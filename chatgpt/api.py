@@ -39,3 +39,22 @@ async def quit(current_bot: dict = Depends(get_current_bot)):
         return JSONResponse(content={"msg":"chatgpt session quited"}, status_code=200)
     except:
         return JSONResponse(content={"msg":"you dont have any chatgpt session ."}, status_code=400)
+
+
+
+
+
+
+@app.post("/sendPromt/")
+async def chat(current_bot: dict = Depends(get_current_bot), input: Question=Body()):
+    if input.question==None or input.question=="":
+        return "enter a message"
+    user_id = str(current_bot.get('_id'))
+    chatgpt = chatgpt_session_manager.get_session(user_id)
+    if chatgpt:
+        chatgpt.send_prompt_to_chatgpt(input.question)
+        answer = chatgpt.return_last_response()
+
+        return JSONResponse(content={"answer":answer}, status_code=200)
+    else:
+        return JSONResponse(content={"answer":"you dont have any chatgpt session ."}, status_code=400)
