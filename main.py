@@ -51,10 +51,16 @@ async def chat(current_user: dict = Depends(get_current_user), input: Question=B
     user_id = str(current_user.get('_id'))
     chatgpt = user_chatgpt_session_manager.get_session(user_id)
     if chatgpt:
-        chatgpt.send_prompt_to_chatgpt(input.question)
-        answer = chatgpt.return_last_response()
+        try:
+            chatgpt.send_prompt_to_chatgpt(input.question)
+            answer = chatgpt.return_last_response()
 
-        return {"answer":answer}
+            return {"answer":answer}
+        except:
+            chatgpt = user_chatgpt_session_manager.get_session(user_id)
+            chatgpt.quit()
+            user_chatgpt_session_manager.delete_session(user_id)
+            return {"msg":"create another gpt session"} 
     else:
         return {"answer":"you dont have any chatgpt session ."}
 
