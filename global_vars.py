@@ -8,3 +8,5 @@ MONGODB_URL="mongodb://77.238.108.86:27000/log?retryWrites=true&w=majority"
 
 AUTH_JWT_SECRET_KEY = "your_secret_key"
 AUTH_JWTALGORITHM = "HS256"
+
+USERDATA_ZIP_DOWNLOAD_DIRECTORY="downloads"
