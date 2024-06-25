@@ -1,12 +1,13 @@
 
-from main import app
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from auth.auth import (
     authenticate_bot,
     create_access_token,
 )
 from auth.schema import BotInRequest, Token
+
+app = APIRouter()
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(input: BotInRequest):
