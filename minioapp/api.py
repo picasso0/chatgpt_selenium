@@ -1,9 +1,11 @@
-from main import app
 from fastapi.responses import JSONResponse
-from fastapi import Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from auth.auth import get_current_bot
-from minio.minio import MinioClass
+from minioapp.minio_class import MinioClass
 from db import get_database
+
+app = APIRouter()
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'zip'

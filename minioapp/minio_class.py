@@ -1,4 +1,4 @@
-from minio.minio import Minio
+from minio import Minio
 from io import BytesIO
 from global_vars import MINIO_URL, MINIO_ACCESS_KEY, MINIO_BUCKET_NAME, MINIO_SECRET_KEY, MINIO_PROTOCOL
 
