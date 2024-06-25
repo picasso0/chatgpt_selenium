@@ -1,9 +1,10 @@
-from main import app
 from fastapi.responses import JSONResponse
-from fastapi import Depends, Body
+from fastapi import APIRouter ,Depends, Body
 from auth.auth import get_current_bot
-from chatgpt.schema import Question
+from chatgpt.schema import Question, Promt
 from chatgpt.chatgpt_manager import chatgpt_session_manager
+
+app = APIRouter()
 
 @app.get("/create_chatgpt_session")
 async def create_chatgpt_session(current_bot: dict = Depends(get_current_bot)):
@@ -14,21 +15,6 @@ async def create_chatgpt_session(current_bot: dict = Depends(get_current_bot)):
     chatgpt_session_manager.create_session(user_id)
     return JSONResponse(content={"msg":"chatgpt session created"}, status_code=200)
     
-
-@app.post("/chat/")
-async def chat(current_bot: dict = Depends(get_current_bot), input: Question=Body()):
-    if input.question==None or input.question=="":
-        return "enter a message"
-    user_id = str(current_bot.get('_id'))
-    chatgpt = chatgpt_session_manager.get_session(user_id)
-    if chatgpt:
-        chatgpt.send_prompt_to_chatgpt(input.question)
-        answer = chatgpt.return_last_response()
-
-        return JSONResponse(content={"answer":answer}, status_code=200)
-    else:
-        return JSONResponse(content={"answer":"you dont have any chatgpt session ."}, status_code=400)
-
 
 @app.post("/quit/")
 async def quit(current_bot: dict = Depends(get_current_bot)):
@@ -43,18 +29,25 @@ async def quit(current_bot: dict = Depends(get_current_bot)):
 
 
 
-
-
 @app.post("/sendPromt/")
-async def chat(current_bot: dict = Depends(get_current_bot), input: Question=Body()):
-    if input.question==None or input.question=="":
-        return "enter a message"
+async def send_prompt(current_bot: dict = Depends(get_current_bot), input: Promt=Body()):
     user_id = str(current_bot.get('_id'))
-    chatgpt = chatgpt_session_manager.get_session(user_id)
+    gpt_type = input.type
+    if input.window_id:
+        window_id = input.window_id
+        window_status = await chatgpt_session_manager.check_window_status(window_id)
+        if window_status != 1:
+            return JSONResponse(content={"answer":"این صفحه منقضی شده است"}, status_code=400)
+        session = await chatgpt_session_manager.get_session(window_id=window_id)
+    else: 
+        session = await chatgpt_session_manager.create_session(user_id=user_id, bot_id=user_id, gpt_type=gpt_type)
+        window_id = session.get("window_id")
+    chatgpt = session.get("session")
+    
     if chatgpt:
-        chatgpt.send_prompt_to_chatgpt(input.question)
+        chatgpt.send_prompt_to_chatgpt(input.promt)
         answer = chatgpt.return_last_response()
-
-        return JSONResponse(content={"answer":answer}, status_code=200)
+        return JSONResponse(content={"window_id":window_id, "answer":answer}, status_code=200)
     else:
-        return JSONResponse(content={"answer":"you dont have any chatgpt session ."}, status_code=400)
+        await chatgpt_session_manager.delete_session(window_id=window_id)   
+        return JSONResponse(content={"answer":"error in create chatgpt session"}, status_code=400)

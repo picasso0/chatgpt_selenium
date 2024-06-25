@@ -1,26 +1,56 @@
-from chatgpt_automatic import ChatGPTAutomator
-
+from chatgpt.chatgpt_automatic import ChatGPTAutomator
+from time import strptime
+from datetime import datetime, timedelta
+from db import insert_window, delete_user_window, select_enable_window, get_window
 class UserChatGPTSessionManager:
     def __init__(self):
         self.chatgpt_sessions = {}
 
-    def get_session(self, user_id: int):
-        if user_id in self.chatgpt_sessions:
-            return self.chatgpt_sessions[user_id]
+    def get_session(self, window_id: int):
+        if window_id in self.chatgpt_sessions:
+            return self.chatgpt_sessions[window_id]
         else:
             return None
 
-    def create_session(self, user_id: int):
+    async def create_session(self, bot_id: int, user_id: int, gpt_type: int ):
         try:
-            session = ChatGPTAutomator(user_id)
-            self.chatgpt_sessions[user_id] = session
-            return session
+            window = await select_enable_window(bot_id=bot_id)
+            if not window:
+                window = await insert_window(bot_id)
+                window_id = str(window.get("_id"))
+                session = ChatGPTAutomator()
+                await session.initialize(window_id=window_id, gpt_type=gpt_type)
+                self.chatgpt_sessions[window_id] = {'session':session, 'user_id':user_id , "window_id": window_id}
+            else:
+                window_id = window.get("_id")
+                self.chatgpt_sessions[window_id]['user_id'] = user_id
+            return self.chatgpt_sessions[window_id]
         except:
             return None
 
-    def delete_session(self, user_id: int):
-        if user_id in self.chatgpt_sessions:
-            self.chatgpt_sessions[user_id].quit()
-            del self.chatgpt_sessions[user_id]
+    async def delete_session(self, window_id: int):
+        if window_id in self.chatgpt_sessions:
+            self.chatgpt_sessions[window_id]['user_id'] = None
+            window_status = await delete_user_window(window_id)
+            if window_status == 1:
+                self.chatgpt_sessions[window_id].quit()
+                del self.chatgpt_sessions[window_id]
+    
+    async def check_window_status(self, window_id):
+        window = await get_window(window_id=window_id)
+        if not window:
+            return 0
+        window_status = window.get("status")
+        if window_status == 1 :
+            if window.get("last_used"):
+                window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
+                now_datetime = datetime.now()
+                if now_datetime > window_last_used_datetime + timedelta(minutes=10):
+                    await self.delete_session(window_id=window_id)
+                    return 0
+        else:
+            return window_status
+            
+        
 
 chatgpt_session_manager = UserChatGPTSessionManager()

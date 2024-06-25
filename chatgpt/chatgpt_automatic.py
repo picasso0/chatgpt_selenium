@@ -12,15 +12,19 @@ import ssl
 import json
 from shutil import copytree, rmtree
 from io import StringIO
+from db import get_user_data_url
+from utils import download_file, extract_zip
+from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 
 class ChatGPTAutomator:
-
-    def __init__(self,user_id, login_check=True, wait_sec=60, driver_path=None):
+    def __init__(self):
+        pass
+    async def initialize(self, window_id, gpt_type, login_check=True, wait_sec=60, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
-        self.user_id = user_id
+        self.window_id = window_id
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
         self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/126.0.6478.61/chromedriver'
@@ -32,10 +36,12 @@ class ChatGPTAutomator:
         self.chrome_thread = None
 
         try:
-            rmtree(f'remote-profile_{self.user_id}')
+            rmtree(f'{self.window_id}')
         except:
             pass
         
+        await self.setup_userdata(gpt_type=gpt_type, window_id=window_id)
+        # copytree('gpt3_userdata',window_id)
         self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
         self.driver.get(url)
@@ -51,26 +57,31 @@ class ChatGPTAutomator:
         except:
             time.sleep(5)
 
-
+    async def setup_userdata(self, gpt_type, window_id):
+        download_url = await get_user_data_url(gpt_type=gpt_type)
+        filepath = download_file(download_url,window_id, USERDATA_ZIP_DOWNLOAD_DIRECTORY)
+        extract_zip(filepath, window_id)
+            
+        
     def setup_webdriver(self):
-        copytree('remote-profile',f'remote-profile_{self.user_id}')
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--start-maximized")
         chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument("--use_subprocess")
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument(f"--user-data-dir=remote-profile_{self.user_id}");
+        chrome_options.add_argument(f"--user-data-dir={self.window_id}");
         try:
             driver = uc.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options)
         except TypeError:
             try:
-                driver = uc.Chrome(executable_path=self.chrome_driver_path, options=chrome_options)
-            except:
                 if (Path.cwd() / self.chrome_driver_path).exists():
                     driver = uc.Chrome(executable_path=str(Path.cwd() / self.chrome_driver_path), options=chrome_options)
+            except:
+                driver = uc.Chrome(executable_path=self.chrome_driver_path, options=chrome_options)
         except:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
@@ -190,12 +201,12 @@ class ChatGPTAutomator:
         while(True):
             try:
                 try:
-                    WebDriverWait(self.driver, 8).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
+                    WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
                     print("human verification passed")
                     return 1
                 except:
-                    WebDriverWait(self.driver, 8).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe[title='Widget containing a Cloudflare security challenge']")))
-                    WebDriverWait(self.driver, 8).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label.ctp-checkbox-label"))).click()
+                    WebDriverWait(self.driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe[title='Widget containing a Cloudflare security challenge']")))
+                    WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label.cb-lb"))).click()
             except:
                 print("human verification faild")
                 pass
@@ -229,7 +240,7 @@ class ChatGPTAutomator:
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
         print("removing remote profile")
-        rmtree(f'remote-profile_{self.user_id}')
+        rmtree(f'remote-profile_{self.window_id}')
         print("Closing the browser...")
         self.driver.close()
         print("driver.close()")
