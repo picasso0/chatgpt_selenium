@@ -240,7 +240,7 @@ class ChatGPTAutomator:
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
         print("removing remote profile")
-        rmtree(f'remote-profile_{self.window_id}')
+        rmtree(f'{self.window_id}')
         print("Closing the browser...")
         self.driver.close()
         print("driver.close()")
