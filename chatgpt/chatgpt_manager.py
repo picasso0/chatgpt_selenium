@@ -1,7 +1,7 @@
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
 from time import strptime
 from datetime import datetime, timedelta
-from db import insert_window, delete_user_window, select_enable_window, get_window
+from db import insert_window, delete_user_window, select_enable_window, get_window, update_window
 class UserChatGPTSessionManager:
     def __init__(self):
         self.chatgpt_sessions = {}
@@ -12,7 +12,7 @@ class UserChatGPTSessionManager:
         else:
             return None
 
-    async def create_session(self, bot_id: int, user_id: int, gpt_type: int ):
+    async def create_session(self, bot_id: str, user_id: str, gpt_type: int ):
         try:
             window = await select_enable_window(bot_id=bot_id)
             if not window:
@@ -26,6 +26,7 @@ class UserChatGPTSessionManager:
                 self.chatgpt_sessions[window_id]['user_id'] = user_id
             return self.chatgpt_sessions[window_id]
         except:
+            await update_window(window_id=window_id,data={"$set":{"status":0}})
             return None
 
     async def delete_session(self, window_id: int):

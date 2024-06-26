@@ -27,15 +27,15 @@ async def delete_user_window(window_id: str):
     await db.bots.update_one({"_id":ObjectId(bot_id)},{'$inc': {'window_counts': -1}})
     window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
     if now_datetime > window_last_used_datetime + timedelta(minutes=10):
-        await db.wondows.update_one({"_id":ObjectId(window_id)},{"status":0})
+        await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":0}})
         return 1
-    await db.wondows.update_one({"_id":ObjectId(window_id)},{"status":1})
+    await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":1}})
     return 0
 
-async def update_window_last_used(window_id: str):
+
+async def update_window(window_id: str, data: dict):
     db = await get_database()
-    now_datetime = datetime.now()
-    window = await db.windows.update_one({"_id":ObjectId(window_id)},{"lastUsed":str(datetime)})
+    window = await db.windows.update_one({"_id":ObjectId(window_id)},data)
     return window
 
 async def select_enable_window(bot_id):

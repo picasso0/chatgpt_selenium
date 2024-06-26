@@ -41,6 +41,8 @@ async def send_prompt(current_bot: dict = Depends(get_current_bot), input: Promt
         session = await chatgpt_session_manager.get_session(window_id=window_id)
     else: 
         session = await chatgpt_session_manager.create_session(user_id=user_id, bot_id=user_id, gpt_type=gpt_type)
+        if not session:
+            return JSONResponse(content={"answer":"این صفحه منقضی شده است"}, status_code=400)
         window_id = session.get("window_id")
     chatgpt = session.get("session")
     
