@@ -19,7 +19,7 @@ from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, window_id, gpt_type, login_check=True, wait_sec=60, driver_path=None):
+    async def initialize(self, window_id, bot_id, login_check=True, wait_sec=60, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -40,7 +40,7 @@ class ChatGPTAutomator:
         except:
             pass
         
-        await self.setup_userdata(gpt_type=gpt_type, window_id=window_id)
+        await self.setup_userdata(bot_id=bot_id, window_id=window_id)
         # copytree('gpt3_userdata',window_id)
         self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
@@ -57,8 +57,8 @@ class ChatGPTAutomator:
         except:
             time.sleep(5)
 
-    async def setup_userdata(self, gpt_type, window_id):
-        download_url = await get_user_data_url(gpt_type=gpt_type)
+    async def setup_userdata(self, bot_id, window_id):
+        download_url = await get_user_data_url(bot_id=bot_id)
         filepath = download_file(download_url,window_id, USERDATA_ZIP_DOWNLOAD_DIRECTORY)
         extract_zip(filepath, window_id)
         os.remove(filepath)
