@@ -1,6 +1,6 @@
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from auth.auth import get_current_bot
+from auth.auth import get_current_user
 from minioapp.minio_class import MinioClass
 from db import get_database
 
@@ -12,7 +12,7 @@ def allowed_file(filename):
 
 
 @app.post("/upload_userdata/")
-async def upload_zip_file(current_user: dict = Depends(get_current_bot), file: UploadFile = File(...)):
+async def upload_zip_file(current_user: dict = Depends(get_current_user), file: UploadFile = File(...)):
     
     if not allowed_file(file.filename):
         raise HTTPException(status_code=400, detail="Only zip files are allowed.")
