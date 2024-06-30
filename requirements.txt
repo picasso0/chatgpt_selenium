@@ -6,3 +6,4 @@ motor
 minio
 python-multipart
 undetected_chromedriver
+webdriver_manager
