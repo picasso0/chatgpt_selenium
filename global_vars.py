@@ -6,7 +6,10 @@ MINIO_BUCKET_NAME="chatgpt"
 
 MONGODB_URL="mongodb://77.238.108.86:27000/log?retryWrites=true&w=majority"
 
-AUTH_JWT_SECRET_KEY = "your_secret_key"
+AUTH_JWT_SECRET_KEY = "django-insecure-e-8z0#u67o-p@h6muvch)rl5p(01e^-=o*m02x&+t+fq$(3a#^"
 AUTH_JWTALGORITHM = "HS256"
 
 USERDATA_ZIP_DOWNLOAD_DIRECTORY="downloads"
+
+
+WINDOW_EXP_MIN=20
