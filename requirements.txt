@@ -6,4 +6,3 @@ motor
 minio
 python-multipart
 undetected_chromedriver
-seleniumbase
