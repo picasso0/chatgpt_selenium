@@ -61,7 +61,7 @@ class ChatGPTAutomator:
         download_url = await get_user_data_url(gpt_type=gpt_type)
         filepath = download_file(download_url,window_id, USERDATA_ZIP_DOWNLOAD_DIRECTORY)
         extract_zip(filepath, window_id)
-            
+        os.remove(filepath)
         
     def setup_webdriver(self):
         chrome_options = uc.ChromeOptions()
