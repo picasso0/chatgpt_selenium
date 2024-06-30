@@ -2,7 +2,9 @@ from fastapi.responses import JSONResponse
 from fastapi import APIRouter ,Depends, Body
 from auth.auth import get_current_bot
 from chatgpt.schema import Question, Promt
+from datetime import datetime
 from chatgpt.chatgpt_manager import chatgpt_session_manager
+from db import update_window
 
 app = APIRouter()
 
@@ -44,9 +46,15 @@ async def send_prompt(current_bot: dict = Depends(get_current_bot), input: Promt
         if not session:
             return JSONResponse(content={"answer":"این صفحه منقضی شده است"}, status_code=400)
         window_id = session.get("window_id")
-    chatgpt = session.get("session")
+    try:
+        chatgpt = session.get("session")
+    except:
+        await chatgpt_session_manager.delete_session(window_id=window_id)   
+        return JSONResponse(content={"answer":"سشن با مشکل مواجه شده است مجددا تلاش کنید ."}, status_code=400)
     
     if chatgpt:
+        now_datetime=datetime.now()
+        await update_window(window_id=window_id,data={"$set":{"last_used":now_datetime}})
         chatgpt.send_prompt_to_chatgpt(input.promt)
         answer = chatgpt.return_last_response()
         return JSONResponse(content={"window_id":window_id, "answer":answer}, status_code=200)
