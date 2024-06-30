@@ -6,7 +6,7 @@ class UserChatGPTSessionManager:
     def __init__(self):
         self.chatgpt_sessions = {}
 
-    def get_session(self, window_id: int):
+    async def get_session(self, window_id: int):
         if window_id in self.chatgpt_sessions:
             return self.chatgpt_sessions[window_id]
         else:
@@ -22,7 +22,7 @@ class UserChatGPTSessionManager:
                 await session.initialize(window_id=window_id, gpt_type=gpt_type)
                 self.chatgpt_sessions[window_id] = {'session':session, 'user_id':user_id , "window_id": window_id}
             else:
-                window_id = window.get("_id")
+                window_id = str(window.get("_id"))
                 self.chatgpt_sessions[window_id]['user_id'] = user_id
             return self.chatgpt_sessions[window_id]
         except:
@@ -40,17 +40,17 @@ class UserChatGPTSessionManager:
     async def check_window_status(self, window_id):
         window = await get_window(window_id=window_id)
         if not window:
+            await self.delete_session(window_id=window_id)
             return 0
         window_status = window.get("status")
         if window_status == 1 :
             if window.get("last_used"):
-                window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
+                window_last_used_datetime = window.get("last_used")
                 now_datetime = datetime.now()
-                if now_datetime > window_last_used_datetime + timedelta(minutes=10):
+                if now_datetime > window_last_used_datetime + timedelta(minutes=20):
                     await self.delete_session(window_id=window_id)
                     return 0
-        else:
-            return window_status
+        return window_status
             
         
 
