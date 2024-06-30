@@ -13,7 +13,7 @@ async def get_database():
 async def insert_window(bot_id: str):
     db = await get_database()
     now_datetime = datetime.now()
-    window_data = {'bot_id':ObjectId(bot_id), 'createAt':str(now_datetime), 'status':1}
+    window_data = {'bot_id':ObjectId(bot_id), 'createAt':now_datetime, 'status':1}
     window = await db.windows.insert_one(window_data)
     aaa = await db.bots.update_one({"_id":ObjectId(bot_id)},{'$inc': {'window_counts': 1}})
     window = await db.windows.find_one({"_id":window.inserted_id})
@@ -26,7 +26,7 @@ async def delete_user_window(window_id: str):
     bot_id = window.get("bot_id")
     await db.bots.update_one({"_id":ObjectId(bot_id)},{'$inc': {'window_counts': -1}})
     window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
-    if now_datetime > window_last_used_datetime + timedelta(minutes=10):
+    if now_datetime > window_last_used_datetime + timedelta(minutes=20):
         await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":0}})
         return 1
     await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":1}})
@@ -44,9 +44,9 @@ async def select_enable_window(bot_id):
     if not window:
         return None
     if window.get("last_used"):
-        window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
+        window_last_used_datetime = window.get("last_used")
         now_datetime = datetime.now()
-        if now_datetime > window_last_used_datetime + timedelta(minutes=10):
+        if now_datetime > window_last_used_datetime + timedelta(minutes=20):
             return None
     return window
 
