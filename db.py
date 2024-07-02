@@ -3,12 +3,23 @@ from os import remove
 import motor.motor_asyncio
 from bson import ObjectId
 from datetime import datetime, timedelta
+from fastapi import HTTPException
 from global_vars import MONGODB_URL, WINDOW_EXP_MIN
 
 async def get_database():
-    client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
-    db = client.chatgpt
-    return db
+    connection_exeption = HTTPException(
+        status_code=500,
+        detail="خطایی در اتصال دیتابیس رخ داده است",
+    )
+    try:
+        client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+        db = client.chatgpt
+        
+        await db.command("serverStatus")
+        print("Connected to MongoDB successfully!")
+        return db
+    except Exception as e:
+        raise connection_exeption
 
 # WINDOWS
 async def insert_window(gpt_type: str):

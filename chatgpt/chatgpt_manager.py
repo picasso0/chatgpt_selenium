@@ -1,5 +1,6 @@
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
 from time import strptime
+from fastapi import HTTPException
 from datetime import datetime, timedelta
 from db import insert_window, delete_user_window, select_enable_window, get_window, update_window
 from global_vars import WINDOW_EXP_MIN
@@ -27,6 +28,8 @@ class UserChatGPTSessionManager:
                 window_id = str(window.get("_id"))
                 self.chatgpt_sessions[window_id]['user_id'] = user_id
             return self.chatgpt_sessions[window_id]
+        except HTTPException as e:
+            raise e
         except:
             try:
                 await update_window(window_id=window_id,data={"$set":{"status":0}})
