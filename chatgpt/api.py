@@ -37,7 +37,6 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
     gpt_type = input.type
     window_id = None
     try:
-        breakpoint()
         if input.window_id:
             window_id = input.window_id
             window_status = await chatgpt_session_manager.check_window_status(window_id)
