@@ -11,14 +11,13 @@ import os
 import ssl
 import json
 from io import StringIO
-from db import get_user_data_url
 from utils import download_file, extract_zip
 from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, window_id, bot_id, login_check=True, wait_sec=60, driver_path=None):
+    async def initialize(self, db, window_id, bot_id, login_check=True, wait_sec=60, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -33,20 +32,14 @@ class ChatGPTAutomator:
         self.login_check = login_check
 
         self.chrome_thread = None
-
-        try:
-            rmtree(f'{self.window_id}')
-        except:
-            pass
         
-        await self.setup_userdata(bot_id=bot_id, window_id=window_id)
+        await self.setup_userdata(db=db, bot_id=bot_id, window_id=window_id)
         # copytree('gpt3_userdata',window_id)
         self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
         self.driver.get(url)
         self.wait_for_human_verification()
         try:
-            time.sleep(3)
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
             try:
                 dialog_btn = self.driver.find_element(by=By.CSS_SELECTOR, value='[id^="radix-"] button')
@@ -56,8 +49,8 @@ class ChatGPTAutomator:
         except:
             time.sleep(5)
 
-    async def setup_userdata(self, bot_id, window_id):
-        download_url = await get_user_data_url(bot_id=bot_id)
+    async def setup_userdata(self, db, bot_id, window_id):
+        download_url = await db.get_user_data_url(bot_id=bot_id)
         filepath = download_file(download_url,window_id, USERDATA_ZIP_DOWNLOAD_DIRECTORY)
         extract_zip(filepath, window_id)
         os.remove(filepath)
@@ -66,15 +59,14 @@ class ChatGPTAutomator:
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument("--use_subprocess")
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument(f"--user-data-dir={self.window_id}/remote-profile");
         try:
-            driver = uc.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options)
+            driver = uc.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options,use_subprocess=False)
         except TypeError:
             try:
                 if (Path.cwd() / self.chrome_driver_path).exists():
