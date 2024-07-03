@@ -10,7 +10,6 @@ import time
 import os
 import ssl
 import json
-from shutil import copytree, rmtree
 from io import StringIO
 from db import get_user_data_url
 from utils import download_file, extract_zip
@@ -239,8 +238,6 @@ class ChatGPTAutomator:
     
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""
-        print("removing remote profile")
-        rmtree(f'{self.window_id}')
         print("Closing the browser...")
         self.driver.close()
         print("driver.close()")

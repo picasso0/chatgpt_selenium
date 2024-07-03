@@ -35,15 +35,11 @@ async def insert_window(gpt_type: str):
 async def delete_user_window(window_id: str):
     db = await get_database()
     now_datetime = datetime.now()
-    window = await db.wondows.find_one({"_id":ObjectId(window_id)})
-    bot_id = window.get("bot_id")
-    await db.bots.update_one({"_id":ObjectId(bot_id)},{'$inc': {'window_counts': -1}})
-    window_last_used_datetime = strptime(window.get("last_used"), "%Y-%m-%d %H:%M:%S")
-    if now_datetime > window_last_used_datetime + timedelta(minutes=int(WINDOW_EXP_MIN)):
-        await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":0}})
-        return 1
-    await db.wondows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":1}})
-    return 0
+    window = await db.windows.find_one({"_id":ObjectId(window_id)})
+    if window.get("status") == 1:
+        bot_id = window.get("bot_id")
+        await db.bots.update_one({"_id":ObjectId(bot_id)},{'$inc': {'window_counts': -1}})
+        await db.windows.update_one({"_id":ObjectId(window_id)},{"$set":{"status":0}})
 
 
 async def update_window(window_id: str, data: dict):
@@ -55,7 +51,7 @@ async def select_enable_window(gpt_type):
     db = await get_database()
 
     # Get all bots with status 1
-    bots = await db.bots.find({"type": 1}).to_list(length=None)
+    bots = await db.bots.find({"type": gpt_type}).to_list(length=None)
     
     for bot in bots:
         windows = await db.windows.find({"bot_id" : bot['_id'], "status": 1}).to_list(length=None)

@@ -1,9 +1,11 @@
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
+from shutil import rmtree
 from time import strptime
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from db import insert_window, delete_user_window, select_enable_window, get_window, update_window
 from global_vars import WINDOW_EXP_MIN
+
 class UserChatGPTSessionManager:
     def __init__(self):
         self.chatgpt_sessions = {}
@@ -49,19 +51,23 @@ class UserChatGPTSessionManager:
             del self.chatgpt_sessions[window_id]
         except:
             pass
+        try:
+            rmtree(window_id)
+        except:
+            pass
+        
     async def check_window_status(self, window_id):
         window = await get_window(window_id=window_id)
-        if not window:
+        if window != 1:
             await self.delete_session(window_id=window_id)
             return 0
         window_status = window.get("status")
-        if window_status == 1 :
-            if window.get("last_used"):
-                window_last_used_datetime = window.get("last_used")
-                now_datetime = datetime.now()
-                if now_datetime > window_last_used_datetime + timedelta(int(WINDOW_EXP_MIN)):
-                    await self.delete_session(window_id=window_id)
-                    return 0
+        if window.get("last_used"):
+            window_last_used_datetime = window.get("last_used")
+            now_datetime = datetime.now()
+            if now_datetime > window_last_used_datetime + timedelta(int(WINDOW_EXP_MIN)):
+                await self.delete_session(window_id=window_id)
+                return 0
         return window_status
             
         
