@@ -3,6 +3,7 @@ from shutil import rmtree
 from time import strptime
 from fastapi import HTTPException
 from datetime import datetime, timedelta
+from asyncio import create_task
 from global_vars import WINDOW_EXP_MIN
 
 class UserChatGPTSessionManager:
@@ -20,7 +21,10 @@ class UserChatGPTSessionManager:
 
     async def create_session(self, gpt_type: int ):
         try:
-            window =  await self.db.select_enable_window(gpt_type)
+            window, expired_windows =  await self.db.select_enable_window(gpt_type)
+            task = None
+            for expire_window in expired_windows:
+                task = create_task(self.delete_session(expire_window))
             if not window:
                 window =  await self.db.insert_window(gpt_type)
                 window_id = str(window.get("_id"))
@@ -40,29 +44,33 @@ class UserChatGPTSessionManager:
                 pass
             return None
 
-    async def delete_session(self, window_id: int):  
-        try:
-            window_status =  await self.db.delete_user_window(window_id)
-            self.chatgpt_sessions[window_id].quit()
-            del self.chatgpt_sessions[window_id]
-        except:
-            pass
-        try:
-            rmtree(window_id)
-        except:
-            pass
+    async def delete_session(self, window_ids):  
+        if type(window_ids) != list:
+            window_ids = [window_ids]
+        for window_id in window_ids:
+            window_id = str(window_id)
+            try:
+                window_status =  await self.db.delete_user_window(window_id)
+                self.chatgpt_sessions[window_id].quit()
+                del self.chatgpt_sessions[window_id]
+            except:
+                pass
+            try:
+                rmtree(window_id)
+            except:
+                pass
         
     async def check_window_status(self, window_id):
         window =  await self.db.get_window(window_id=window_id)
         if window != 1:
-            self.delete_session(window_id=window_id)
+            create_task(self.delete_session(window_id) )
             return 0
         window_status = window.get("status")
         if window.get("last_used"):
             window_last_used_datetime = window.get("last_used")
             now_datetime = datetime.now()
             if now_datetime > window_last_used_datetime + timedelta(int(WINDOW_EXP_MIN)):
-                self.delete_session(window_id=window_id)
+                create_task(self.delete_session(window_id) )
                 return 0
         return window_status
             

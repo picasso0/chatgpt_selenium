@@ -5,7 +5,7 @@ from chatgpt.schema import Question, Promt
 from datetime import datetime
 from chatgpt.chatgpt_manager import chatgpt_session_manager
 from db import get_db
-
+from asyncio import create_task
 app = APIRouter()
 
 
@@ -34,7 +34,7 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
             chatgpt = session.get("session")
             await db.update_window(window_id=window_id,data={"$set":{"status":2}})
         except:
-            await chatgpt_session_manager.delete_session(window_id=window_id)   
+            create_task(chatgpt_session_manager.delete_session(window_id) )
             return JSONResponse(content={"answer":"سشن با مشکل مواجه شده است مجددا تلاش کنید ."}, status_code=400)
         
         if chatgpt:
@@ -44,9 +44,11 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
             answer = chatgpt.return_last_response()
             await db.update_window(window_id=window_id,data={"$set":{"status":1}})
             await db.insert_userchat(window_id=window_id, user_id=user_id, now_datetime=now_datetime, promt=input.promt, answer=answer)
+            if input.single_promt==1:
+                create_task(chatgpt_session_manager.delete_session(window_id) )
             return JSONResponse(content={"window_id":window_id, "answer":answer}, status_code=200)
         else:
-            await chatgpt_session_manager.delete_session(window_id=window_id)   
+            create_task(chatgpt_session_manager.delete_session(window_id) )   
             return JSONResponse(content={"answer":"error in create chatgpt session"}, status_code=400)
     except HTTPException as e:
         raise e
