@@ -49,23 +49,18 @@ class DatabaseClass:
     async def select_enable_window(self, gpt_type):
         # Get all bots with status 1
         bots = await self.db.bots.find({"type": gpt_type}).to_list(length=None)
-        
+        expired_windows = []
         for bot in bots:
-            windows = await self.db.windows.find({"bot_id" : bot['_id'], "status": 1}).to_list(length=None)
+            windows = await self.db.windows.find({"bot_id" : bot['_id'], "status": 1},sort=[("_id", 1)]).to_list(length=None)
             for window in windows:
                 if window.get("last_used"):
                     window_last_used_datetime = window.get("last_used")
                     now_datetime = datetime.now()
                     if now_datetime > window_last_used_datetime + timedelta(minutes=int(WINDOW_EXP_MIN)):
-                        await self.db.windows.update_one({"_id":ObjectId(window['_id'])},{"$set":{"status":0}})
-                        await self.db.bots.update_one({"_id":ObjectId(window['bot_id'])},{'$inc': {'window_counts': -1}})
-                        try:
-                            rmtree(str(window['_id']))
-                        except:
-                            pass
+                        expired_windows.append(window.get("_id"))
                     else:
-                        return window
-        return None
+                        return window,expired_windows
+        return None, expired_windows
         
     async def get_window(self, window_id):
         window = await self.db.windows.find_one({"_id":ObjectId(window_id)})
