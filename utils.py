@@ -39,10 +39,3 @@ def is_zip_file(file_path):
         return True
     else:
         return False
-
-def remove_directory(directory):
-    try:
-        shutil.rmtree(directory)
-        return True
-    except Exception as e:
-        return False
