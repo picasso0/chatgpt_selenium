@@ -32,6 +32,8 @@ class UserChatGPTSessionManager:
                 session = ChatGPTAutomator()
                 await session.initialize(db=self.db, window_id=window_id, bot_id=bot_id)
                 self.chatgpt_sessions[window_id] = {'session':session , "window_id": window_id}
+                if task:
+                    await task
             else:
                 window_id = str(window.get("_id"))
             return self.chatgpt_sessions[window_id]
@@ -48,6 +50,7 @@ class UserChatGPTSessionManager:
         if type(window_ids) != list:
             window_ids = [window_ids]
         for window_id in window_ids:
+            print(f"deleting {window_id}")
             window_id = str(window_id)
             try:
                 window_status =  await self.db.delete_user_window(window_id)
