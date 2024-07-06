@@ -4,13 +4,14 @@ from time import strptime
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from asyncio import create_task
-from global_vars import WINDOW_EXP_MIN
+from global_vars import WINDOW_EXP_HOUR
+from db import DatabaseClass
 
 class UserChatGPTSessionManager:
     def __init__(self):
         self.chatgpt_sessions = {}
     
-    async def set_db(self, db):
+    async def set_db(self, db:DatabaseClass):
         self.db=db
 
     async def get_session(self, window_id: int):
@@ -18,7 +19,37 @@ class UserChatGPTSessionManager:
             return self.chatgpt_sessions[window_id]
         else:
             return None
-
+        
+    async def create_public_session(self, gpt_type: int ):
+        try:
+            window, expired_windows =  await self.db.select_enable_public_window(gpt_type)
+            task = None
+            for expire_window in expired_windows:
+                task = create_task(self.delete_session(expire_window))
+            if not window:
+                check_public_windows = await self.db.check_public_windows(gpt_type)
+                if check_public_windows == 0:
+                    return 0
+                window =  await self.db.insert_window(gpt_type=gpt_type,public=1)
+                window_id = str(window.get("_id"))
+                bot_id = str(window.get("bot_id"))
+                session = ChatGPTAutomator()
+                await session.initialize(db=self.db, window_id=window_id, bot_id=bot_id)
+                self.chatgpt_sessions[window_id] = {'session':session , "window_id": window_id}
+                if task:
+                    await task
+            else:
+                window_id = str(window.get("_id"))
+            return self.chatgpt_sessions[window_id]
+        except HTTPException as e:
+            raise e
+        except:
+            try:
+                 await self.db.update_window(window_id=window_id,data={"$set":{"status":0}})
+            except:
+                pass
+            return None
+        
     async def create_session(self, gpt_type: int ):
         try:
             window, expired_windows =  await self.db.select_enable_window(gpt_type)
@@ -65,14 +96,16 @@ class UserChatGPTSessionManager:
         
     async def check_window_status(self, window_id):
         window =  await self.db.get_window(window_id=window_id)
-        if window != 1:
+        if window == 0:
             create_task(self.delete_session(window_id) )
             return 0
+        elif window == 2:
+            return 2
         window_status = window.get("status")
         if window.get("last_used"):
             window_last_used_datetime = window.get("last_used")
             now_datetime = datetime.now()
-            if now_datetime > window_last_used_datetime + timedelta(int(WINDOW_EXP_MIN)):
+            if now_datetime > window_last_used_datetime + timedelta(hours=int(WINDOW_EXP_HOUR)):
                 create_task(self.delete_session(window_id) )
                 return 0
         return window_status

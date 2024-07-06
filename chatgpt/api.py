@@ -19,17 +19,23 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
     gpt_type = input.type
     window_id = None
     try:
-        if input.window_id:
+        if input.single_promt==1:
+            session = await chatgpt_session_manager.create_public_session(gpt_type=gpt_type)
+            if session==0:
+                return JSONResponse(content={"answer":"صفحات درحال استفاده هستند لطفا مجددا تلاش نمایید ."}, status_code=400)
+            session.get("session").create_new_chat()
+        elif input.window_id:
             window_id = input.window_id
             window_status = await chatgpt_session_manager.check_window_status(window_id)
-            if window_status != 1:
+            if window_status == 2:
+                return JSONResponse(content={"answer":"این صفحه درحال استفاده است لطفا مجددا تلاش نمایید ."}, status_code=400)
+            elif window_status == 0:
                 return JSONResponse(content={"answer":"این صفحه منقضی شده است"}, status_code=400)
             session = await chatgpt_session_manager.get_session(window_id=window_id)
         else: 
             session = await chatgpt_session_manager.create_session(gpt_type=gpt_type)
             if not session:
                 return JSONResponse(content={"answer":"در ساخت نشست چت جی پی تی مشکلی رخ داده است مجددا تلاش نمایید"}, status_code=400)
-            window_id = session.get("window_id")
         try:
             chatgpt = session.get("session")
             await db.update_window(window_id=window_id,data={"$set":{"status":2}})
@@ -38,14 +44,13 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
             return JSONResponse(content={"answer":"سشن با مشکل مواجه شده است مجددا تلاش کنید ."}, status_code=400)
         
         if chatgpt:
+            window_id = session.get("window_id")
             now_datetime=datetime.now()
             await db.update_window(window_id=window_id,data={"$set":{"last_used":now_datetime, "status":2}})
             chatgpt.send_prompt_to_chatgpt(input.promt)
             answer = chatgpt.return_last_response()
             await db.update_window(window_id=window_id,data={"$set":{"status":1}})
             await db.insert_userchat(window_id=window_id, user_id=user_id, now_datetime=now_datetime, promt=input.promt, answer=answer)
-            if input.single_promt==1:
-                create_task(chatgpt_session_manager.delete_session(window_id) )
             return JSONResponse(content={"window_id":window_id, "answer":answer}, status_code=200)
         else:
             create_task(chatgpt_session_manager.delete_session(window_id) )   

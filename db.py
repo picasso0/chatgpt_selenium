@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from global_vars import MONGODB_URL
 from datetime import datetime, timedelta
 from shutil import rmtree
-from global_vars import WINDOW_EXP_MIN
+from global_vars import WINDOW_EXP_HOUR, PUBLIC_WINDOW_EXP_HOUR
 
 async def get_db():
     db = DatabaseClass()
@@ -25,10 +25,10 @@ class DatabaseClass:
         except Exception as e:
             return False
         
-    async def insert_window(self, gpt_type: str):
+    async def insert_window(self, gpt_type: str, public: int = 0):
         now_datetime = datetime.now()
         bot = await self.db.bots.find_one(sort=[("windows_number", 1)])
-        window_data = {'bot_id':ObjectId(bot['_id']), 'create_at':now_datetime, 'status':1}
+        window_data = {'bot_id':ObjectId(bot['_id']), 'create_at':now_datetime, 'status':1, "public_window": public}
         window = await self.db.windows.insert_one(window_data)
         await self.db.bots.update_one({"_id":ObjectId(bot['_id'])},{'$inc': {'window_counts': 1}})
         window = await self.db.windows.find_one({"_id":window.inserted_id})
@@ -56,12 +56,34 @@ class DatabaseClass:
                 if window.get("last_used"):
                     window_last_used_datetime = window.get("last_used")
                     now_datetime = datetime.now()
-                    if now_datetime > window_last_used_datetime + timedelta(minutes=int(WINDOW_EXP_MIN)):
+                    if now_datetime > window_last_used_datetime + timedelta(hours=int(WINDOW_EXP_HOUR)):
+                        expired_windows.append(window.get("_id"))
+                    else:
+                        return window,expired_windows
+        return None, expired_windows
+    
+    async def select_enable_public_window(self, gpt_type):
+        bots = await self.db.bots.find({"type": gpt_type}).to_list(length=None)
+        expired_windows = []
+        for bot in bots:
+            window = await self.db.windows.find_one({"bot_id" : bot['_id'], "status": 1, "public_window": 1})
+            if window:
+                if window.get("last_used"):
+                    window_last_used_datetime = window.get("last_used")
+                    now_datetime = datetime.now()
+                    if now_datetime > window_last_used_datetime + timedelta(hours=int(PUBLIC_WINDOW_EXP_HOUR)):
                         expired_windows.append(window.get("_id"))
                     else:
                         return window,expired_windows
         return None, expired_windows
         
+    async def check_public_windows(self, gpt_type):
+        bot_counts = await self.db.bots.count_documents({"type": gpt_type})
+        window_counts = await self.db.windows.count_documents({"status": 2, "public_window": 1})
+        if bot_counts == window_counts:
+            return 0
+        return 1
+       
     async def get_window(self, window_id):
         window = await self.db.windows.find_one({"_id":ObjectId(window_id)})
         return window
