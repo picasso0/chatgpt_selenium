@@ -17,7 +17,7 @@ from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, db, window_id, bot_id, login_check=True, wait_sec=60, driver_path=None):
+    async def initialize(self, db, window_id, bot_id, login_check=True, wait_sec=10, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -25,7 +25,7 @@ class ChatGPTAutomator:
         self.window_id = window_id
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
-        self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/126.0.6478.61/chromedriver'
+        self.chrome_driver_path = '/home/xrdp/.wdm/drivers/chromedriver/linux64/126.0.6478.126/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
 
         self.wait_sec = wait_sec
@@ -66,7 +66,7 @@ class ChatGPTAutomator:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument(f"--user-data-dir={self.window_id}/remote-profile");
         try:
-            driver = uc.Chrome(service=ChromeService(self.chrome_driver_path), options=chrome_options,use_subprocess=False)
+            driver = uc.Chrome(driver_executable_path=self.chrome_driver_path,user_data_dir=f"{self.window_id}/remote-profile", options=chrome_options)
         except TypeError:
             try:
                 if (Path.cwd() / self.chrome_driver_path).exists():

@@ -12,7 +12,6 @@ app = APIRouter()
 
 @app.post("/sendPromt/")
 async def send_prompt(current_user: dict = Depends(get_current_user), input: Promt=Body()):
-    breakpoint()
     db = await get_db()
     if db==0:
         return JSONResponse(content={"answer":"اتصال به دیتابیس با مشکل مواجه شده است"}, status_code=400)
