@@ -24,8 +24,9 @@ class UserChatGPTSessionManager:
         try:
             window, expired_windows =  await self.db.select_enable_public_window(gpt_type)
             task = None
-            for expire_window in expired_windows:
-                task = create_task(self.delete_session(expire_window))
+            await self.delete_session(expired_windows)
+            # for expire_window in expired_windows:
+            #     task = create_task(self.delete_session(expire_window))
             if not window:
                 check_public_windows = await self.db.check_public_windows(gpt_type)
                 if check_public_windows == 0:
@@ -48,14 +49,19 @@ class UserChatGPTSessionManager:
                  await self.db.update_window(window_id=window_id,data={"$set":{"status":0}})
             except:
                 pass
+            try:
+                rmtree(window_id)
+            except:
+                pass
             return None
         
     async def create_session(self, gpt_type: int ):
         try:
             window, expired_windows =  await self.db.select_enable_window(gpt_type)
             task = None
-            for expire_window in expired_windows:
-                task = create_task(self.delete_session(expire_window))
+            await self.delete_session(expired_windows)
+            # for expire_window in expired_windows:
+            #     task = create_task(self.delete_session(expire_window))
             if not window:
                 window =  await self.db.insert_window(gpt_type)
                 window_id = str(window.get("_id"))
@@ -73,6 +79,10 @@ class UserChatGPTSessionManager:
         except:
             try:
                  await self.db.update_window(window_id=window_id,data={"$set":{"status":0}})
+            except:
+                pass
+            try:
+                rmtree(window_id)
             except:
                 pass
             return None
@@ -97,7 +107,8 @@ class UserChatGPTSessionManager:
     async def check_window_status(self, window_id):
         window =  await self.db.get_window(window_id=window_id)
         if window == 0:
-            create_task(self.delete_session(window_id) )
+            # create_task(self.delete_session(window_id) )
+            await self.delete_session(window_id)
             return 0
         elif window == 2:
             return 2
@@ -106,7 +117,9 @@ class UserChatGPTSessionManager:
             window_last_used_datetime = window.get("last_used")
             now_datetime = datetime.now()
             if now_datetime > window_last_used_datetime + timedelta(hours=int(WINDOW_EXP_HOUR)):
-                create_task(self.delete_session(window_id) )
+                await self.delete_session(window_id)
+                
+                # create_task(self.delete_session(window_id) )
                 return 0
         return window_status
             
