@@ -143,6 +143,7 @@ class ChatGPTAutomator:
         """ :return: the text of the last chatgpt response """
         try:
             WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'main div[data-message-author-role="assistant"]')))
+            time.sleep(2)
             response_elements = self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
             if response_elements:
                 return response_elements[-1].text
