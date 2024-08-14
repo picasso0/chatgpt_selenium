@@ -23,11 +23,10 @@ class ChatGPTAutomator:
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
         self.window_id = window_id
-        # self.chrome_driver_path = ChromeDriverManager().install()
+       # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
-        self.chrome_driver_path = '/home/xrdp/.wdm/drivers/chromedriver/linux64/126.0.6478.126/chromedriver-linux64/chromedriver'
+        self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/127.0.6533.119/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
-
         self.wait_sec = wait_sec
         self.login_check = login_check
 
