@@ -1,5 +1,5 @@
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter ,Depends, Body, HTTPException
+from fastapi import APIRouter ,Depends, Body, HTTPException, Query, Header
 from auth.auth import get_current_user
 from chatgpt.schema import Question, Promt
 from datetime import datetime
@@ -63,13 +63,11 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
         raise e
 
 
-
-# @app.post("/quit/")
-# async def quit(current_user: dict = Depends(get_current_user)):
-#     user_id = str(current_user.get('_id'))
-#     try:
-#         chatgpt = chatgpt_session_manager.get_session(user_id)
-#         chatgpt.quit()
-#         return JSONResponse(content={"msg":"chatgpt session quited"}, status_code=200)
-#     except:
-#         return JSONResponse(content={"msg":"you dont have any chatgpt session ."}, status_code=400)
+@app.post("/delete_session/")
+async def delete_session(auth: str = Header(None),window_id: str=Query()):
+    if (auth=="test"):
+        try:
+            await chatgpt_session_manager.delete_session(window_id)
+        except:
+            pass
+    return {"status":True}
