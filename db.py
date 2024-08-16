@@ -16,7 +16,7 @@ async def get_db():
 class DatabaseClass:
     def __init__(self):
         self.client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
-        self.db = self.client.chatgpt
+        self.db = self.client.chatgpt_new
 
     async def check_connection(self):
         try:
