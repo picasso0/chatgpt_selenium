@@ -25,7 +25,7 @@ class ChatGPTAutomator:
         self.window_id = window_id
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
-        self.chrome_driver_path = '/home/xrdp/.wdm/drivers/chromedriver/linux64/126.0.6478.126/chromedriver-linux64/chromedriver'
+        self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/127.0.6533.119/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
 
         self.wait_sec = wait_sec
@@ -56,10 +56,12 @@ class ChatGPTAutomator:
         os.remove(filepath)
         
     def setup_webdriver(self):
+        breakpoint()
+        driver = None
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--window-size=400,300')
         chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
