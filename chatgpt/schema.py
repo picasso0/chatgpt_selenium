@@ -7,5 +7,3 @@ class Question(BaseModel):
 class Promt(BaseModel):
     promt: str
     type: int
-    window_id: Optional[str] = None
-    single_promt: Optional[int] = None
