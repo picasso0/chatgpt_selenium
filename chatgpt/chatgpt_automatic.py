@@ -57,7 +57,7 @@ class ChatGPTAutomator:
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--window-size=400,300')
         chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
@@ -74,6 +74,7 @@ class ChatGPTAutomator:
         except:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
+        driver.set_window_size(1024, 768)
         return driver
     
     def create_new_chat(self):
@@ -195,8 +196,15 @@ class ChatGPTAutomator:
                     print("human verification passed")
                     return 1
                 except:
-                    WebDriverWait(self.driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe[title='Widget containing a Cloudflare security challenge']")))
-                    WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label.cb-lb"))).click()
+                    element = self.driver.find_element_by_css_selector('#px-captcha')
+                    action = ActionChains(self.driver)
+                    action.click_and_hold(element)
+                    action.perform()
+                    time.sleep(10)
+                    action.release(element)
+                    action.perform()
+                    time.sleep(0.2)
+                    action.release(element)
             except:
                 print("human verification faild")
                 pass
