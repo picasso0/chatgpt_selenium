@@ -40,8 +40,8 @@ class ChatGPTAutomator:
         try:
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
             try:
-                dialog_btn = self.driver.find_element(by=By.CSS_SELECTOR, value='[id^="radix-"] button')
-                dialog_btn.click()
+                WebDriverWait(self.driver, 20).until(EC.frame_to_be_available_and_switch_to_it((By.XPATH,"//iframe[@title='Widget containing a Cloudflare security challenge']")))
+                WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@class='ctp-checkbox-label']"))).click()
             except:
                 pass
         except:
