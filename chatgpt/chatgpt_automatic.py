@@ -27,27 +27,21 @@ class ChatGPTAutomator:
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
         self.chrome_driver_path = '/home/rdp/.wdm/drivers/chromedriver/linux64/127.0.6533.119/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
-
         self.wait_sec = wait_sec
         self.login_check = login_check
 
         self.chrome_thread = None
-        
         await self.setup_userdata(db=db, bot_id=bot_id, window_id=window_id)
         # copytree('gpt3_userdata',window_id)
         self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
         self.driver.get(url)
-        self.wait_for_human_verification()
+        # self.wait_for_human_verification()
         try:
-            WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
-            try:
-                dialog_btn = self.driver.find_element(by=By.CSS_SELECTOR, value='[id^="radix-"] button')
-                dialog_btn.click()
-            except:
-                pass
+            WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
         except:
-            time.sleep(5)
+            self.driver.refresh()
+            time.sleep(2)
 
     async def setup_userdata(self, db, bot_id, window_id):
         download_url = await db.get_user_data_url(bot_id=bot_id)
@@ -56,7 +50,6 @@ class ChatGPTAutomator:
         os.remove(filepath)
         
     def setup_webdriver(self):
-        breakpoint()
         driver = None
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
@@ -78,6 +71,7 @@ class ChatGPTAutomator:
         except:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
+        driver.set_window_size(1024, 768)
         return driver
     
     def create_new_chat(self):
@@ -145,6 +139,7 @@ class ChatGPTAutomator:
         """ :return: the text of the last chatgpt response """
         try:
             WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'main div[data-message-author-role="assistant"]')))
+            time.sleep(2)
             response_elements = self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
             if response_elements:
                 return response_elements[-1].text
@@ -198,8 +193,15 @@ class ChatGPTAutomator:
                     print("human verification passed")
                     return 1
                 except:
-                    WebDriverWait(self.driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"iframe[title='Widget containing a Cloudflare security challenge']")))
-                    WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "label.cb-lb"))).click()
+                    element = self.driver.find_element_by_css_selector('#px-captcha')
+                    action = ActionChains(self.driver)
+                    action.click_and_hold(element)
+                    action.perform()
+                    time.sleep(10)
+                    action.release(element)
+                    action.perform()
+                    time.sleep(0.2)
+                    action.release(element)
             except:
                 print("human verification faild")
                 pass

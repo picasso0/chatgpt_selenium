@@ -40,7 +40,7 @@ class UserChatGPTSessionManager:
             window_id = str(window_id)
             try:
                 window_status =  await self.db.delete_user_window(window_id)
-                self.chatgpt_sessions[window_id].quit()
+                self.chatgpt_sessions[window_id]['session'].quit()
                 del self.chatgpt_sessions[window_id]
             except:
                 pass
