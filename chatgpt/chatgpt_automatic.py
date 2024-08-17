@@ -36,16 +36,12 @@ class ChatGPTAutomator:
         self.driver = self.setup_webdriver()
         url = "https://chat.openai.com"
         self.driver.get(url)
-        self.wait_for_human_verification()
+        # self.wait_for_human_verification()
         try:
-            WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
-            try:
-                WebDriverWait(self.driver, 20).until(EC.frame_to_be_available_and_switch_to_it((By.XPATH,"//iframe[@title='Widget containing a Cloudflare security challenge']")))
-                WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//label[@class='ctp-checkbox-label']"))).click()
-            except:
-                pass
+            WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
         except:
-            time.sleep(5)
+            self.driver.refresh()
+            time.sleep(2)
 
     async def setup_userdata(self, db, bot_id, window_id):
         download_url = await db.get_user_data_url(bot_id=bot_id)
