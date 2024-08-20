@@ -193,7 +193,7 @@ class ChatGPTAutomator:
                     print("human verification passed")
                     return 1
                 except:
-                    element = self.driver.find_element_by_css_selector('#px-captcha')
+                    element = self.driver.find_element(By.CSS_SELECTOR,'#px-captcha')
                     action = ActionChains(self.driver)
                     action.click_and_hold(element)
                     action.perform()
@@ -231,6 +231,13 @@ class ChatGPTAutomator:
         # except:
         #     time.sleep(2)
         # return
+        
+    def show_check_verify(self):
+        try:
+            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "enforcement-containerchatgpt-freeaccount")))
+            return 1
+        except:
+            return 0
     
     def quit(self):
         """ Closes the browser and terminates the WebDriver session."""

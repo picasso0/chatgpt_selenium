@@ -33,6 +33,11 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
             window_id = session.get("window_id")
             now_datetime=datetime.now()
             chatgpt.send_prompt_to_chatgpt(input.promt)
+            
+            if chatgpt.show_check_verify():
+                await chatgpt_session_manager.delete_session(window_id)
+                return JSONResponse(content={"answer":"لطفا مجددا تلاش فرمایید خطای احراز هویت ."}, status_code=400)
+            
             answer = chatgpt.return_last_response()
             await db.insert_userchat(window_id=window_id, user_id=user_id, now_datetime=now_datetime, promt=input.promt, answer=answer)
             await chatgpt_session_manager.delete_session(window_id)
