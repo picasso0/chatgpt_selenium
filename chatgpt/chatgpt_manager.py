@@ -47,6 +47,7 @@ class UserChatGPTSessionManager:
             try:
                 rmtree(window_id)
             except:
+                print(f"cannot delete folder {window_id}")
                 pass
 
 chatgpt_session_manager = UserChatGPTSessionManager()

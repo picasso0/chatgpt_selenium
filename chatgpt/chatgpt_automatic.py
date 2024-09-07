@@ -75,12 +75,17 @@ class ChatGPTAutomator:
         return driver
     
     def create_new_chat(self):
+        print("start create_new_chat")
         try:
             WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")))
             button = self.driver.find_element(By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")
             button.click()
         except:
+            print("failed create_new_chat")
             pass
+        time.sleep(2)
+        print("end create_new_chat")
+        
     
     def talk_to_chatgpt(self, prompt, to_list=False, to_csv=False, new_chat=False):
         if new_chat:
@@ -98,6 +103,7 @@ class ChatGPTAutomator:
             return self.return_last_response()
 
     def send_prompt_to_chatgpt(self, prompt):
+        print("start send_prompt_to_chatgpt")
         input_box = self.driver.find_element(by=By.CSS_SELECTOR, value="form textarea")
         # prompt = prompt.replace("\n","\\n").replace("\'","\\\'")
         prompt_escaped = json.dumps(prompt).strip("\"").replace("'", "\\'").replace('"', '\\"')
@@ -119,6 +125,7 @@ class ChatGPTAutomator:
         except:
             time.sleep(self.wait_sec)
             return
+        print("end send_prompt_to_chatgpt")
     
     def return_chatgpt_conversation(self):
         return self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
@@ -137,15 +144,19 @@ class ChatGPTAutomator:
 
     def return_last_response(self):
         """ :return: the text of the last chatgpt response """
+        print("start return_last_response")
         try:
             WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'main div[data-message-author-role="assistant"]')))
             time.sleep(2)
             response_elements = self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
             if response_elements:
+                print("end return_last_response --> successful")
                 return response_elements[-1].text
             else:
+                print("end return_last_response --> failed")
                 return ""
         except:
+            print("end return_last_response --> failed")
             return ""
     
     def return_last_table(self, to_csv):
@@ -234,7 +245,7 @@ class ChatGPTAutomator:
         
     def show_check_verify(self):
         try:
-            WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "enforcement-containerchatgpt-freeaccount")))
+            WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.ID, "enforcement-containerchatgpt-freeaccount")))
             return 1
         except:
             return 0
