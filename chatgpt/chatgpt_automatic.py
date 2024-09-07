@@ -244,10 +244,14 @@ class ChatGPTAutomator:
         # return
         
     def show_check_verify(self):
+        print(" in show_check_verify")
         try:
             WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.ID, "enforcement-containerchatgpt-freeaccount")))
+            print("show_check_verify failed")
             return 1
         except:
+            print("show_check_verify passed")
+            
             return 0
     
     def quit(self):

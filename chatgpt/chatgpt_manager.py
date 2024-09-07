@@ -39,15 +39,15 @@ class UserChatGPTSessionManager:
             print(f"deleting {window_id}")
             window_id = str(window_id)
             try:
+                rmtree(window_id)
+            except:
+                print(f"cannot delete folder {window_id}")
+                pass
+            try:
                 window_status =  await self.db.delete_user_window(window_id)
                 self.chatgpt_sessions[window_id]['session'].quit()
                 del self.chatgpt_sessions[window_id]
             except:
-                pass
-            try:
-                rmtree(window_id)
-            except:
-                print(f"cannot delete folder {window_id}")
                 pass
 
 chatgpt_session_manager = UserChatGPTSessionManager()
