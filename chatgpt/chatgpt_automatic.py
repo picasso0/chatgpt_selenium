@@ -104,10 +104,11 @@ class ChatGPTAutomator:
 
     def send_prompt_to_chatgpt(self, prompt):
         print("start send_prompt_to_chatgpt")
-        input_box = self.driver.find_element(by=By.CSS_SELECTOR, value="form textarea")
+        input_box = self.driver.find_element(by=By.ID, value="prompt-textarea")
         # prompt = prompt.replace("\n","\\n").replace("\'","\\\'")
-        prompt_escaped = json.dumps(prompt).strip("\"").replace("'", "\\'").replace('"', '\\"')
-        self.driver.execute_script(f"arguments[0].value = '{prompt_escaped}';", input_box)
+        # prompt_escaped = json.dumps(prompt).strip("\"").replace("'", "\\'").replace('"', '\\"')
+        input_box.click()
+        input_box.send_keys(prompt)
         time.sleep(0.3)
         input_box.send_keys(Keys.ENTER)
         try:
