@@ -23,6 +23,8 @@ class UserChatGPTSessionManager:
     async def create_session(self, gpt_type: int ):
         try:
             window =  await self.db.insert_window(gpt_type)
+            if not window:
+                raise Exception("does not have any bot userdata")
             window_id = str(window.get("_id"))
             bot_id = str(window.get("bot_id"))
             session = ChatGPTAutomator()

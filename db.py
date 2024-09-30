@@ -27,7 +27,10 @@ class DatabaseClass:
         
     async def insert_window(self, gpt_type: str, public: int = 0):
         now_datetime = datetime.now()
-        bot = await self.db.bots.find_one(sort=[("window_counts", 1)])
+        bot = await self.db.bots.find_one(filter={"status":1} ,sort=[("window_counts", 1)])
+        if not bot:
+            print("cannot find any bot")
+            return 0
         window_data = {'bot_id':ObjectId(bot['_id']), 'create_at':now_datetime, 'status':2, "public_window": public}
         window = await self.db.windows.insert_one(window_data)
         await self.db.bots.update_one({"_id":ObjectId(bot['_id'])},{'$inc': {'window_counts': 1}})
