@@ -81,10 +81,10 @@ class ChatGPTAutomator:
             button = self.driver.find_element(By.CSS_SELECTOR, "div.grow.overflow-hidden.text-ellipsis.whitespace-nowrap.text-sm.text-token-text-primary")
             button.click()
         except:
-            print("failed create_new_chat")
-            pass
+            return 0
         time.sleep(2)
         print("end create_new_chat")
+        return True
         
     
     def talk_to_chatgpt(self, prompt, to_list=False, to_csv=False, new_chat=False):
@@ -105,12 +105,16 @@ class ChatGPTAutomator:
     def send_prompt_to_chatgpt(self, prompt):
         print("start send_prompt_to_chatgpt")
         input_box = self.driver.find_element(by=By.ID, value="prompt-textarea")
+        raw_string = repr(prompt)
         # prompt = prompt.replace("\n","\\n").replace("\'","\\\'")
         # prompt_escaped = json.dumps(prompt).strip("\"").replace("'", "\\'").replace('"', '\\"')
         input_box.click()
-        input_box.send_keys(prompt)
-        time.sleep(0.3)
-        input_box.send_keys(Keys.ENTER)
+        input_box.send_keys(raw_string)
+        time.sleep(1)
+        try:
+            input_box.send_keys(Keys.ENTER)
+        except:
+            return False
         try:
             # input_btn = self.driver.find_element(by=By.CSS_SELECTOR, value="form div+button")
             input_btn = input_box.find_element(By.XPATH, '../following-sibling::button')
@@ -125,7 +129,7 @@ class ChatGPTAutomator:
             WebDriverWait(self.driver, self.wait_sec).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
         except:
             time.sleep(self.wait_sec)
-            return
+        return True
         print("end send_prompt_to_chatgpt")
     
     def return_chatgpt_conversation(self):

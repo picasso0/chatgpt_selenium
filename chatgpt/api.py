@@ -16,6 +16,7 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
     if db==0:
         return JSONResponse(content={"answer":"اتصال به دیتابیس با مشکل مواجه شده است"}, status_code=400)
     await chatgpt_session_manager.set_db(db)
+    await chatgpt_session_manager.check_bots_time_limitation()
     user_id = str(current_user)
     gpt_type = input.type
     window_id = None
@@ -24,24 +25,34 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
         if not session:
             print("در ساخت نشست چت جی پی تی مشکلی رخ داده است مجددا تلاش نمایید")
             return JSONResponse(content={"answer":"در ساخت نشست چت جی پی تی مشکلی رخ داده است مجددا تلاش نمایید"}, status_code=400)
+        
+        bot_id = session.get("bot_id")
+
         try:
             chatgpt = session.get("session")
         except:
             await chatgpt_session_manager.delete_session(window_id)
+            await chatgpt_session_manager.handle_bot_error(bot_id, "get session fault")
+            
             print("سشن با مشکل مواجه شده است مجددا تلاش کنید .",window_id)
             
             return JSONResponse(content={"answer":"سشن با مشکل مواجه شده است مجددا تلاش کنید ."}, status_code=400)
-        
         if chatgpt:
             try:
-                chatgpt.create_new_chat()
+                if not chatgpt.create_new_chat():
+                    await chatgpt_session_manager.handle_bot_error(bot_id, "bot loged out", 0)
+                    return JSONResponse(content={"answer":f"plese try again selected bot was loged out  ."}, status_code=400)
+                    
                 window_id = session.get("window_id")
                 now_datetime=datetime.now()
-                chatgpt.send_prompt_to_chatgpt(input.promt)
+                if not chatgpt.send_prompt_to_chatgpt(input.promt):
+                    await chatgpt_session_manager.handle_bot_error(bot_id, "1 hour limitation", 2)
+                    return JSONResponse(content={"answer":"1 hour limitation ."}, status_code=400)
+                    
                 if chatgpt.show_check_verify():
                     await chatgpt_session_manager.delete_session(window_id)
-                    print("لطفا مجددا تلاش فرمایید خطای احراز هویت .",window_id)
-                    return JSONResponse(content={"answer":"لطفا مجددا تلاش فرمایید خطای احراز هویت ."}, status_code=400)
+                    await chatgpt_session_manager.handle_bot_error(bot_id, "captcha error")
+                    return JSONResponse(content={"answer":"لطفا مجددا تلاش فرمایید خطای کپچا ."}, status_code=400)
             
                 answer = chatgpt.return_last_response()
                 await db.insert_userchat(window_id=window_id, user_id=user_id, now_datetime=now_datetime, promt=input.promt, answer=answer)
@@ -51,6 +62,8 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
                 pass
         
         await chatgpt_session_manager.delete_session(window_id)
+        await chatgpt_session_manager.handle_bot_error(bot_id, "use chatgpt session faild")
+        
         print("error in create chatgpt session",window_id)
         return JSONResponse(content={"answer":"error in create chatgpt session"}, status_code=400)
     

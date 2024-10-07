@@ -10,7 +10,7 @@ import json
 
 def download_file(url, file_name, directory="downloads"):
     response = requests.head(url, allow_redirects=True, verify=True)
-    if response.headers.get("Content-Encoding") == 'gzip' or response.headers.get("Content-Type") == 'application/zip' or response.headers.get('Content-Type') == 'application/octet-stream':
+    if response.headers.get("server") == "uvicorn" or response.headers.get("Content-Encoding") == 'gzip' or response.headers.get("Content-Type") == 'application/zip' or response.headers.get('Content-Type') == 'application/octet-stream':
         response = requests.get(url, stream=True, allow_redirects=True, verify=True)
         if not os.path.exists(directory):
             os.makedirs(directory)
