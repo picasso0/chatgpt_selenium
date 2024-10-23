@@ -17,7 +17,7 @@ from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, db, window_id, bot_id, login_check=True, wait_sec=10, driver_path=None):
+    async def initialize(self, db, window_id, bot_id,incognito, login_check=True, wait_sec=10, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -31,9 +31,13 @@ class ChatGPTAutomator:
         self.login_check = login_check
 
         self.chrome_thread = None
-        await self.setup_userdata(db=db, bot_id=bot_id, window_id=window_id)
-        # copytree('gpt3_userdata',window_id)
-        self.driver = self.setup_webdriver()
+        breakpoint()
+        if not incognito:
+            await self.setup_userdata(db=db, bot_id=bot_id, window_id=window_id)
+            # copytree('gpt3_userdata',window_id)
+        
+        self.driver = self.setup_webdriver(incognito)
+            
         url = "https://chat.openai.com"
         self.driver.get(url)
         # self.wait_for_human_verification()
@@ -49,7 +53,7 @@ class ChatGPTAutomator:
         extract_zip(filepath, window_id)
         os.remove(filepath)
         
-    def setup_webdriver(self):
+    def setup_webdriver(self, incognito):
         driver = None
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
@@ -59,7 +63,11 @@ class ChatGPTAutomator:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument(f"--user-data-dir={self.window_id}/remote-profile");
+        if incognito:
+            chrome_options.add_argument("--incognito")
+        else:
+            chrome_options.add_argument(f"--user-data-dir={self.window_id}/remote-profile");
+        
         try:
             driver = uc.Chrome(driver_executable_path=self.chrome_driver_path,user_data_dir=f"{self.window_id}/remote-profile", options=chrome_options)
         except TypeError:

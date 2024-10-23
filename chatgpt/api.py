@@ -19,9 +19,15 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
     await chatgpt_session_manager.check_bots_time_limitation()
     user_id = str(current_user)
     gpt_type = input.type
+    incognito = None
+    breakpoint()
+    try:
+        incognito = input.incognito
+    except:
+        incognito = None
     window_id = None
     try:
-        session = await chatgpt_session_manager.create_session(gpt_type=gpt_type)
+        session = await chatgpt_session_manager.create_session(gpt_type=gpt_type, incognito=incognito)
         if not session:
             print("در ساخت نشست چت جی پی تی مشکلی رخ داده است مجددا تلاش نمایید")
             return JSONResponse(content={"answer":"در ساخت نشست چت جی پی تی مشکلی رخ داده است مجددا تلاش نمایید"}, status_code=400)
@@ -39,9 +45,10 @@ async def send_prompt(current_user: dict = Depends(get_current_user), input: Pro
             return JSONResponse(content={"answer":"سشن با مشکل مواجه شده است مجددا تلاش کنید ."}, status_code=400)
         if chatgpt:
             try:
-                if not chatgpt.create_new_chat():
-                    await chatgpt_session_manager.handle_bot_error(bot_id, "bot loged out", 0)
-                    return JSONResponse(content={"answer":f"plese try again selected bot was loged out  ."}, status_code=400)
+                if not incognito:
+                    if not chatgpt.create_new_chat():
+                        await chatgpt_session_manager.handle_bot_error(bot_id, "bot loged out", 0)
+                        return JSONResponse(content={"answer":f"plese try again selected bot was loged out  ."}, status_code=400)
                     
                 window_id = session.get("window_id")
                 now_datetime=datetime.now()

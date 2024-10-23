@@ -41,7 +41,7 @@ class UserChatGPTSessionManager:
                     {"$set": {"failed_at": None,"status":1}}
                 )
                 
-    async def create_session(self, gpt_type: int ):
+    async def create_session(self, gpt_type: int, incognito):
         try:
             window =  await self.db.insert_window(gpt_type)
             if not window:
@@ -49,7 +49,7 @@ class UserChatGPTSessionManager:
             window_id = str(window.get("_id"))
             bot_id = str(window.get("bot_id"))
             session = ChatGPTAutomator()
-            await session.initialize(db=self.db, window_id=window_id, bot_id=bot_id)
+            await session.initialize(db=self.db, window_id=window_id, bot_id=bot_id, incognito=incognito)
             self.chatgpt_sessions[window_id] = {'session':session , "window_id": window_id,'bot_id': bot_id}
             return self.chatgpt_sessions[window_id]
         except HTTPException as e:
