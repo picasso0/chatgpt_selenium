@@ -136,7 +136,7 @@ class ChatGPTAutomator:
 
         try:
             WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
-         except:
+        except:
             print("cannot find end response") 
         return True
         print("end send_prompt_to_chatgpt")
