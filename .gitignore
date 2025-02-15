@@ -1,0 +1,8 @@
+chromedriver
+venv/
+Chrome/
+gpt*
+*.pyc
+66*
+*.png
+*.lock
