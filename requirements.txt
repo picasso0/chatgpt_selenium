@@ -1,0 +1,10 @@
+fastapi==0.110.1
+uvicorn==0.29.0
+python-jose==3.3.0
+selenium
+motor
+minio
+python-multipart
+undetected_chromedriver
+webdriver_manager
+fake-useragent
