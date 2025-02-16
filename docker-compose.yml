@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  selenium:
+    build: .
+    image: chatgpt_selenium:latest
+    container_name: chatgpt_selenium
+    ports:
+      - "8000:8000"  # Optional: If you want to expose VNC or any other port
+    volumes:
+      - .:/app  # Mount current directory to /app in container for easy access
+    environment:
+      - DISPLAY=:99  # Set display for Xvfb if needed

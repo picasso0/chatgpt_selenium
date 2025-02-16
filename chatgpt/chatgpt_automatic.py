@@ -71,6 +71,8 @@ class ChatGPTAutomator:
         
         
         try:
+            # driver = uc.Chrome(options=chrome_options)
+            
             driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
         except TypeError:
             try:
@@ -135,7 +137,8 @@ class ChatGPTAutomator:
             return False
 
         try:
-            WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
+            WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
+            # WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
         except:
             print("cannot find end response") 
         return True
