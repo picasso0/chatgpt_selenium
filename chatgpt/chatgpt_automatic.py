@@ -13,19 +13,18 @@ import json
 from io import StringIO
 from fake_useragent import UserAgent
 from utils import download_file, extract_zip
-from global_vars import USERDATA_ZIP_DOWNLOAD_DIRECTORY
 
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, incognito, login_check=True, wait_sec=10, driver_path=None):
+    def initialize(self, incognito, login_check=True, wait_sec=10, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
-        self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/133.0.6943.53/chromedriver-linux64/chromedriver'
+        # self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/133.0.6943.53/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
         self.wait_sec = wait_sec
         self.login_check = login_check
@@ -44,11 +43,6 @@ class ChatGPTAutomator:
         #     self.driver.refresh()
         #     time.sleep(2)
 
-    async def setup_userdata(self, db, bot_id, window_id):
-        download_url = await db.get_user_data_url(bot_id=bot_id)
-        filepath = download_file(download_url,window_id, USERDATA_ZIP_DOWNLOAD_DIRECTORY)
-        extract_zip(filepath, window_id)
-        os.remove(filepath)
         
     def setup_webdriver(self, incognito):
         driver = None
@@ -71,9 +65,9 @@ class ChatGPTAutomator:
         
         
         try:
-            # driver = uc.Chrome(options=chrome_options)
+            driver = uc.Chrome(options=chrome_options)
             
-            driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
+            # driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
         except TypeError:
             try:
                 if (Path.cwd() / self.chrome_driver_path).exists():
