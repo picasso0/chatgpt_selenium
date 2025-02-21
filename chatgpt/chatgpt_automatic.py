@@ -11,6 +11,8 @@ import os
 import ssl
 import json
 from io import StringIO
+import shutil
+
 from fake_useragent import UserAgent
 from utils import download_file, extract_zip
 
@@ -22,7 +24,28 @@ class ChatGPTAutomator:
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
-        # self.chrome_driver_path = ChromeDriverManager().install()
+        self.cwd = os.getcwd()
+
+        # Target directory (customize as needed)
+        target_dir = "./custom_drivers"  # e.g., "C:/my_project/drivers"
+        if os.path.exists(f"{target_dir}/chromedriver"):
+            self.chrome_driver_path = f"{target_dir}/chromedriver"
+        else:
+            # Install ChromeDriver using webdriver-manager
+            driver_path = ChromeDriverManager().install()
+
+            # Move the downloaded driver to your custom directory
+            driver_name = "chromedriver.exe" if os.name == "nt" else "chromedriver"
+            target_driver_path = os.path.join(target_dir, driver_name)
+
+            # Move the file
+            shutil.move(driver_path, target_driver_path)
+
+            print(f"ChromeDriver installed and moved to: {target_driver_path}")
+
+            # Use the new driver path
+            self.chrome_driver_path = target_driver_path
+        
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
         # self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/133.0.6943.53/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
@@ -48,7 +71,6 @@ class ChatGPTAutomator:
         driver = None
         user_agent = UserAgent()
         chrome_options = uc.ChromeOptions()
-        chrome_options.headless = True
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
         # chrome_options.add_argument('--window-size=400,300')
@@ -56,18 +78,14 @@ class ChatGPTAutomator:
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         # chrome_options.add_argument('--headless')
-        # chrome_options.add_argument("--user-data-dir=/root/Desktop/test")
+        chrome_options.add_argument(f"--user-data-dir={self.cwd+'/hasanmt1_userdata'}")
         # chrome_options.add_argument('--profile-directory=/root/Desktop/test')
-        chrome_options.add_argument(f'--user-agent=={user_agent.random}')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument("--incognito")
-        
-        
         
         try:
-            driver = uc.Chrome(options=chrome_options)
+            # driver = uc.Chrome(options=chrome_options)
             
-            # driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
+            driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
         except TypeError:
             try:
                 if (Path.cwd() / self.chrome_driver_path).exists():
@@ -266,9 +284,18 @@ class ChatGPTAutomator:
             return 0
     
     def quit(self):
+
         """ Closes the browser and terminates the WebDriver session."""
         print("Closing the browser...")
-        self.driver.close()
-        print("driver.close()")
-        self.driver.quit()
-        print("driver.quit()")
+        try:
+            print("driver.close()")
+            self.driver.close()
+        except:
+            pass
+        try:
+            print("driver.quit()")
+            self.driver.quit()
+        except:
+            pass
+        
+           
