@@ -6,3 +6,5 @@ gpt*
 66*
 *.png
 *.lock
+custom_drivers/
+*_userdata/
