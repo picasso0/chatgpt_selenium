@@ -5,7 +5,7 @@ from chatgpt.schema import Question, Promt
 from datetime import datetime
 # from chatgpt.chatgpt_automatic_proxy import ChatGPTAutomator
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
-from db import get_db
+from utils.db import get_db
 from asyncio import create_task
 from time import sleep
 app = APIRouter()

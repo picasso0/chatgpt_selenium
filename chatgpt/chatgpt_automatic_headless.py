@@ -14,7 +14,7 @@ from io import StringIO
 import shutil
 
 from fake_useragent import UserAgent
-from utils import download_file, extract_zip
+from utils.utils import download_file, extract_zip
 
 class ChatGPTAutomator:
     def __init__(self):

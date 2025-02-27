@@ -12,7 +12,7 @@ import ssl
 import json
 from io import StringIO
 from fake_useragent import UserAgent
-from utils import download_file, extract_zip
+from utils.utils import download_file, extract_zip
 
 class ChatGPTAutomator:
     def __init__(self):

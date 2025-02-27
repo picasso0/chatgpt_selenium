@@ -4,9 +4,10 @@ import os
 from datetime import datetime
 from time import sleep
 import json
-from db import get_db
+from utils.db import get_db
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
 from health_check_api import update_last_consumption_time
+import requests
 
 def message_callback(data):
     print("recieve data")
@@ -85,6 +86,11 @@ def message_callback(data):
         
 
 if __name__ == "__main__":
+    try:
+        server_init_url = str(os.getenv("SERTVER_INIT_URL"))
+        requests.get(server_init_url)
+    except:
+        print("server init not is up")
     while(True):
         print("start subscriber")
         rabbit_connection = RabbitMQ()

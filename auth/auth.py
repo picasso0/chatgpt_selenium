@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from global_vars import AUTH_JWT_SECRET_KEY, AUTH_JWTALGORITHM
+from utils.global_vars import AUTH_JWT_SECRET_KEY, AUTH_JWTALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
