@@ -9,3 +9,4 @@ gpt*
 custom_drivers/
 *_userdata/
 myenv/
+*.zip
