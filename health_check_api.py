@@ -2,10 +2,20 @@
 from fastapi import FastAPI
 from datetime import datetime
 from rabbit.rabbit_class import RabbitMQ
+from fastapi.middleware.cors import CORSMiddleware
 import json
 import subprocess
 import os
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 last_consumption_time = None
 

@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
 from pathlib import Path
+from datetime import datetime
 import time
 import os
 import ssl
@@ -19,7 +20,7 @@ from utils.utils import download_file, extract_zip
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    def initialize(self, incognito, login_check=True, wait_sec=10, driver_path=None):
+    def initialize(self, userdata_url, userdata_name, login_check=True, wait_sec=10, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
@@ -55,27 +56,24 @@ class ChatGPTAutomator:
 
         self.chrome_thread = None
         
-        self.driver = self.setup_webdriver(incognito)
+        userdata_folder = self.handle_userdata(userdata_url, userdata_name)
+        self.driver = self.setup_webdriver(userdata_folder)
         # self.print_myip()
         url = "https://chat.openai.com"
         self.driver.get(url)
         return self.driver
-        # self.wait_for_human_verification()
-        # try:
-        #     WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
-        # except:
-        #     self.driver.refresh()
-        #     time.sleep(2)
-    def print_myip(self):
-        self.driver.get("http://httpbin.org/ip")
+    
+    def handle_userdata(self, userdata_url, userdata_name):
+        if not os.path.isdir("userdatas_folder"):
+            os.makedirs("userdatas_folder")
+            
+        if not os.path.isdir(f"userdatas_folder/{userdata_name}"):
+            target_file = download_file(userdata_url,userdata_name)
+            target_file = extract_zip(target_file,f"userdatas_folder/{userdata_name}")
+        
+        target_file = f"{self.cwd}/userdatas_folder/{userdata_name}"
 
-        # Retrieve the page source
-        page_source = self.driver.page_source
-
-        # Parse the JSON response to extract the IP address
-
-
-        print(f"My IP address is: {page_source}")
+        return target_file
     def manage_directory(self, dir_path):
         # Check if the directory exists
         if os.path.isdir(dir_path):
@@ -87,23 +85,17 @@ class ChatGPTAutomator:
         os.makedirs(dir_path)
         print(f"Created directory: {dir_path}")
     
-    def setup_webdriver(self, incognito):
+    def setup_webdriver(self, userdata_folder):
         driver = None
         user_agent = UserAgent()
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
-        # if incognito:
-        # chrome_options.add_argument("--incognito")
-        # chrome_options.add_argument('--window-size=400,300')
         chrome_options.add_argument("--disable-setuid-sandbox")
-        # chrome_options.add_argument("--proxy-server=socks5://127.0.0.1:9050")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
-        # chrome_options.add_argument('--headless')
-        chrome_options.add_argument(f"--user-data-dir={self.cwd+'/hasanmt1_userdata'}")
-        # chrome_options.add_argument(f"--user-data-dir={self.cwd+'/profile_folder'}")
-        # chrome_options.add_argument('--profile-directory=/root/Desktop/test')
+        chrome_options.add_argument(f"--user-data-dir={userdata_folder}")
+
         chrome_options.add_argument('--disable-dev-shm-usage')
         
         try:

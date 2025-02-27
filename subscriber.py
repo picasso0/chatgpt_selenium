@@ -13,6 +13,17 @@ def message_callback(data):
     print("recieve data")
     update_last_consumption_time()
     db = get_db()
+    userdata_url = ""
+    userdata_name = ""
+    try:
+        server_userdata_url = str(os.getenv("SERTVER_USERDATA_URL"))
+        userdata = requests.get(server_userdata_url)
+        userdata = userdata.json()
+        userdata_url = userdata['userdata']
+        userdata_name = userdata['name']
+    except:
+        raise Exception("cannot recieve userdata")
+    
     now_datetime=datetime.now()
     for request in data['body']:
         chat_db_record_id = None
@@ -25,10 +36,10 @@ def message_callback(data):
             chat_db_record = db.rabbit_chats.insert_one({"promt":promt, "create_at": now_datetime, "status":"in_progress"})
             chat_db_record_id = chat_db_record.inserted_id
         attempts = 1
-        while(attempts < 4):
+        while(attempts < 2):
             try:
                 chatgpt = ChatGPTAutomator()
-                chatgpt.initialize(0)
+                chatgpt.initialize(userdata_url, userdata_name)
                 if chatgpt:
                     now_datetime=datetime.now()
                     if not chatgpt.send_prompt_to_chatgpt(promt):
@@ -57,9 +68,10 @@ def message_callback(data):
                         raise Exception("answer data is not json")
                     prompt_token = chatgpt.estimate_token_usage(promt)
                     answer_token = chatgpt.estimate_token_usage(answer)
+                    db_dict = {"status":"complete", "userdata":userdata_name, "response":answer, 'completion_tokens':answer_token+prompt_token,'prompt_tokens':prompt_token }
                     send_data_dict = {"status":"complete", "response":answer, 'completion_tokens':answer_token+prompt_token,'prompt_tokens':prompt_token }
                     chatgpt.driver.quit()
-                    db.rabbit_chats.update_one({"_id":chat_db_record_id},{"$set":send_data_dict})
+                    db.rabbit_chats.update_one({"_id":chat_db_record_id},{"$set":db_dict})
                     
                     rabbit_connection = RabbitMQ()
                     rabbit_connection.connect()
@@ -69,7 +81,7 @@ def message_callback(data):
                 else:
                     print("failed")
                     chatgpt.quit()
-                db.rabbit_chats.update_one({"_id":chat_db_record_id},{"$set":{"status":"failed","message":"error in create chatgpt session"}})
+                db.rabbit_chats.update_one({"_id":chat_db_record_id},{"$set":{"status":"failed","message":"error in create chatgpt session","userdata":userdata_name}})
                 raise Exception("failed")
             except Exception as e:
                 print(f"get attemt {attempts} with error {str(e)}")
