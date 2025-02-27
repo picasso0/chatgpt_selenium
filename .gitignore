@@ -8,3 +8,4 @@ gpt*
 *.lock
 custom_drivers/
 *_userdata/
+myenv/
