@@ -10,3 +10,5 @@ custom_drivers/
 *_userdata/
 myenv/
 *.zip
+subscriber_pid.txt
+userdatas_folder/
