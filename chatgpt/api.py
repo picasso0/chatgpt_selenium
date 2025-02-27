@@ -3,7 +3,6 @@ from fastapi import APIRouter ,Depends, Body, HTTPException
 from auth.auth import get_current_user
 from chatgpt.schema import Question, Promt
 from datetime import datetime
-from chatgpt.chatgpt_manager import chatgpt_session_manager
 # from chatgpt.chatgpt_automatic_proxy import ChatGPTAutomator
 from chatgpt.chatgpt_automatic import ChatGPTAutomator
 from db import get_db
@@ -17,16 +16,16 @@ async def send_prompt(input: Promt=Body()):
     gpt_type = input.type
     incognito = 1
     chatgpt = ChatGPTAutomator()
-    await chatgpt.initialize(1)
+    chatgpt.initialize(1)
+    db = get_db()
     if chatgpt:
         try:
             now_datetime=datetime.now()
+            chat_db_record = db.api_chats.insert_one({"created_at":now_datetime,"promt":input.promt,"status":"in_progress"})
             if not chatgpt.send_prompt_to_chatgpt(input.promt):
+                db.api_chats.update_one({"_id":chat_db_record.inserted_id},{"$set":{"status":"failed","message":"send promt error (login page)"}})
                 return JSONResponse(content={"answer":"1 hour limitation ."}, status_code=400)
                 
-            # if chatgpt.show_check_verify():
-            #     return JSONResponse(content={"answer":"لطفا مجددا تلاش فرمایید خطای کپچا ."}, status_code=400)
-        
             answer = chatgpt.return_last_response()
             try:
                 answer=answer.split('json\nCopy\nEdit\n')[1]
@@ -40,10 +39,12 @@ async def send_prompt(input: Promt=Body()):
             prompt_token = chatgpt.estimate_token_usage(input.promt)
             answer_token = chatgpt.estimate_token_usage(answer)
             chatgpt.driver.quit()
+            db.api_chats.update_one({"_id":chat_db_record.inserted_id},{"$set":{"status":"complete", "response":answer, 'completion_tokens':answer_token+prompt_token,'prompt_tokens':prompt_token }})
             return JSONResponse(content={ "response":answer, 'completion_tokens':answer_token+prompt_token,'prompt_tokens':prompt_token }, status_code=200)
         except: 
             pass
-    
+        
+        db.api_chats.update_one({"_id":chat_db_record.inserted_id},{"$set":{"status":"failed","message":"error in create chatgpt session"}})
         return JSONResponse(content={"answer":"error in create chatgpt session"}, status_code=400)
     else:
         print("failed")

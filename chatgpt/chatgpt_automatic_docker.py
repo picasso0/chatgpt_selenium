@@ -5,11 +5,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-import random
-from selenium.webdriver.common.action_chains import ActionChains
-# from selenium_stealth import stealth
 from pathlib import Path
 import time
 import os
@@ -22,26 +17,24 @@ from utils import download_file, extract_zip
 class ChatGPTAutomator:
     def __init__(self):
         pass
-    async def initialize(self, incognito, login_check=True, wait_sec=10, driver_path=None):
+    def initialize(self, incognito, login_check=True, wait_sec=10, driver_path=None):
         """
         :param wait_sec: waiting for chatgpt response time
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
         # self.chrome_driver_path = ChromeDriverManager().install()
         # self.chrome_driver_path="/Users/imanpirooz/.wdm/drivers/chromedriver/mac64/126.0.6478.61/chromedriver-mac-arm64/chromedriver"
-        self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/133.0.6943.53/chromedriver-linux64/chromedriver'
+        # self.chrome_driver_path = '/root/.wdm/drivers/chromedriver/linux64/133.0.6943.53/chromedriver-linux64/chromedriver'
         # self.chrome_driver_path = driver_path if driver_path != None else ChromeDriverManager().install()
         self.wait_sec = wait_sec
         self.login_check = login_check
 
         self.chrome_thread = None
+        
         self.driver = self.setup_webdriver(incognito)
-        # Navigate to a site that returns your IP
-        self.print_myip()
+            
         url = "https://chat.openai.com"
         self.driver.get(url)
-        self.wait_for_human_verification()
-
         return self.driver
         # self.wait_for_human_verification()
         # try:
@@ -49,17 +42,7 @@ class ChatGPTAutomator:
         # except:
         #     self.driver.refresh()
         #     time.sleep(2)
-    
-    def print_myip(self):
-        self.driver.get("http://httpbin.org/ip")
 
-        # Retrieve the page source
-        page_source = self.driver.page_source
-
-        # Parse the JSON response to extract the IP address
-
-
-        print(f"My IP address is: {page_source}")
         
     def setup_webdriver(self, incognito):
         driver = None
@@ -71,18 +54,19 @@ class ChatGPTAutomator:
         chrome_options.add_argument("--disable-setuid-sandbox")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
-        # chrome_options.add_argument("user-data-dir=/root/Desktop/test")
+        chrome_options.add_argument('--headless')
+        # chrome_options.add_argument("--user-data-dir=/app/hasanmt_userdata/")
         # chrome_options.add_argument('--profile-directory=/root/Desktop/test')
-        chrome_options.add_argument(f'user-agent={user_agent.random}')
+        # chrome_options.add_argument(f'--user-agent=={user_agent.random}')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument("--proxy-server=socks5://127.0.0.1:9050")
-        chrome_options.add_argument("--incognito")
+        # chrome_options.add_argument("--incognito")
         
-        # service = Service(executable_path=self.chrome_driver_path)
-        # driver = webdriver.Chrome(service=service,options=chrome_options)
-        # return driver
+        
+        
         try:
-            driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
+            driver = uc.Chrome(options=chrome_options)
+            
+            # driver = uc.Chrome(driver_executable_path=self.chrome_driver_path, options=chrome_options)
         except TypeError:
             try:
                 if (Path.cwd() / self.chrome_driver_path).exists():
@@ -93,6 +77,7 @@ class ChatGPTAutomator:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
         driver.set_window_size(1024, 768)
+
         return driver
     
     def create_new_chat(self):
@@ -133,38 +118,41 @@ class ChatGPTAutomator:
 
     def send_prompt_to_chatgpt(self, prompt):
         print("start send_prompt_to_chatgpt")
-        time.sleep(2)
-        input_box = self.driver.find_element(by=By.XPATH, value='//div[contains(@id, "prompt-textarea")]')
-        raw_string = repr(prompt)
-        # prompt = prompt.replace("\n","\\n").replace("\'","\\\'")
-        # prompt_escaped = json.dumps(prompt).strip("\"").replace("'", "\\'").replace('"', '\\"')
-        input_box.click()
-        input_box.send_keys(raw_string)
-        time.sleep(1)
         try:
-            input_box.send_keys(Keys.ENTER)
-        except:
-            return False
-        # try:
-        #     # input_btn = self.driver.find_element(by=By.CSS_SELECTOR, value="form div+button")
-        #     input_btn = input_box.find_element(By.XPATH, '../following-sibling::button')
-        #     time.sleep(0.1)
-        #     input_btn.click()
-        # except:
-        #     pass
-        # time.sleep(self.wait_sec)
-        time.sleep(1)
-        try:
-            WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
-            # WebDriverWait(self.driver, self.wait_sec).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form button>[data-state=\"closed\"]")))
-            # WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
+            try:
+                os.remove("start.png")
+            except:
+                pass
+            try:
+                os.remove("example.png")
+            except:
+                pass
+            try:
+                os.remove("end.png")
+            except:
+                pass
+            time.sleep(5)
+            self.driver.save_screenshot("start.png")
+            input_box = self.driver.find_element(by=By.XPATH, value='//div[contains(@id, "prompt-textarea")]')
+            raw_string = repr(prompt)
+            input_box.click()
+            input_box.send_keys(raw_string)
+            # time.sleep(1)
+            try:
+                input_box.send_keys(Keys.ENTER)
+            except:
+                return False
 
-            # WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[aria-label="Start voice input"]')))
+            try:
+                # WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
+                WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
+            except:
+                print("cannot find end response") 
+            self.driver.save_screenshot("end.png")
+            print("end send_prompt_to_chatgpt")
+            return True
         except:
-            print("cannot find end response") 
-            # time.sleep(self.wait_sec)
-        return True
-        print("end send_prompt_to_chatgpt")
+            return 0
     
     def return_chatgpt_conversation(self):
         return self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
@@ -186,7 +174,7 @@ class ChatGPTAutomator:
         print("start return_last_response")
         try:
             WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'main div[data-message-author-role="assistant"]')))
-            time.sleep(2)
+            # time.sleep(2)
             response_elements = self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
             if response_elements:
                 print("end return_last_response --> successful")
@@ -249,29 +237,7 @@ class ChatGPTAutomator:
             except:
                 print("passed")
                 break
-                
-        
         # OLD
-        # while(True):
-        #     try:
-        #         try:
-        #             WebDriverWait(self.driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "form textarea")))
-        #             print("human verification passed")
-        #             return 1
-        #         except:
-        #             element = self.driver.find_element(By.CSS_SELECTOR,'#px-captcha')
-        #             action = ActionChains(self.driver)
-        #             action.click_and_hold(element)
-        #             action.perform()
-        #             time.sleep(10)
-        #             action.release(element)
-        #             action.perform()
-        #             time.sleep(0.2)
-        #             action.release(element)
-        #     except:
-        #         print("human verification faild")
-        #         pass
-        # OLD OLD
         
         # if not self.login_check:
         #     try:

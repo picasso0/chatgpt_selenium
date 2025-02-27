@@ -25,7 +25,8 @@ class ChatGPTAutomator:
         """ 
         ssl._create_default_https_context = ssl._create_unverified_context
         self.cwd = os.getcwd()
-
+        self.manage_directory(self.cwd+'/profile_folder')
+        
         # Target directory (customize as needed)
         target_dir = "./custom_drivers"  # e.g., "C:/my_project/drivers"
         if os.path.exists(f"{target_dir}/chromedriver"):
@@ -55,7 +56,7 @@ class ChatGPTAutomator:
         self.chrome_thread = None
         
         self.driver = self.setup_webdriver(incognito)
-            
+        # self.print_myip()
         url = "https://chat.openai.com"
         self.driver.get(url)
         return self.driver
@@ -65,20 +66,43 @@ class ChatGPTAutomator:
         # except:
         #     self.driver.refresh()
         #     time.sleep(2)
+    def print_myip(self):
+        self.driver.get("http://httpbin.org/ip")
 
-        
+        # Retrieve the page source
+        page_source = self.driver.page_source
+
+        # Parse the JSON response to extract the IP address
+
+
+        print(f"My IP address is: {page_source}")
+    def manage_directory(self, dir_path):
+        # Check if the directory exists
+        if os.path.isdir(dir_path):
+            # If it exists, delete the directory
+            shutil.rmtree(dir_path)  # This removes the directory and all its contents
+            print(f"Deleted existing directory: {dir_path}")
+
+        # Create the directory again
+        os.makedirs(dir_path)
+        print(f"Created directory: {dir_path}")
+    
     def setup_webdriver(self, incognito):
         driver = None
         user_agent = UserAgent()
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-extensions")
+        # if incognito:
+        # chrome_options.add_argument("--incognito")
         # chrome_options.add_argument('--window-size=400,300')
         chrome_options.add_argument("--disable-setuid-sandbox")
+        # chrome_options.add_argument("--proxy-server=socks5://127.0.0.1:9050")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         # chrome_options.add_argument('--headless')
         chrome_options.add_argument(f"--user-data-dir={self.cwd+'/hasanmt1_userdata'}")
+        # chrome_options.add_argument(f"--user-data-dir={self.cwd+'/profile_folder'}")
         # chrome_options.add_argument('--profile-directory=/root/Desktop/test')
         chrome_options.add_argument('--disable-dev-shm-usage')
         
@@ -96,7 +120,9 @@ class ChatGPTAutomator:
             if (Path.cwd() / self.chrome_driver_path).exists():
                 driver = uc.Chrome(service=ChromeService(str(Path.cwd() / self.chrome_driver_path)), options=chrome_options)
         driver.set_window_size(1024, 768)
-
+        # driver.delete_all_cookies() 
+        # driver.get('chrome://settings/clearBrowserData')
+        # driver.execute_cdp_cmd('Network.clearBrowserCache', {})
         return driver
     
     def create_new_chat(self):
@@ -134,27 +160,40 @@ class ChatGPTAutomator:
             return self.return_last_table(to_csv)
         else:
             return self.return_last_response()
+        
 
     def send_prompt_to_chatgpt(self, prompt):
-        print("start send_prompt_to_chatgpt")
-        time.sleep(2)
-        input_box = self.driver.find_element(by=By.XPATH, value='//div[contains(@id, "prompt-textarea")]')
-        raw_string = repr(prompt)
-        input_box.click()
-        input_box.send_keys(raw_string)
-        # time.sleep(1)
         try:
-            input_box.send_keys(Keys.ENTER)
-        except:
-            return False
+            print("start send_prompt_to_chatgpt")
+            time.sleep(2)
+            input_box = self.driver.find_element(by=By.XPATH, value='//div[contains(@id, "prompt-textarea")]')
+            raw_string = str(json.loads(prompt))
+            input_box.click()
+            input_box.send_keys(raw_string)            
+            time.sleep(1)
+            try:
+                input_box.send_keys(Keys.ENTER)
+            except:
+                return False
+            attempts = 0
+            while(attempts < 20):
+                # try:
+                #     WebDriverWait(self.driver, 3).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
+                #     return True
+                # except:
+                try:
+                    WebDriverWait(self.driver, 3).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
+                    return True
+                except:
+                        pass
+                time.sleep(3)   
+                attempts = attempts + 1 
 
-        try:
-            WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.XPATH, "(//form//button[@disabled])[last()]")))
-            # WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'button[data-testid="composer-speech-button"]')))
+                print("cannot find end response") 
+            return True
+            print("end send_prompt_to_chatgpt")
         except:
-            print("cannot find end response") 
-        return True
-        print("end send_prompt_to_chatgpt")
+            return 0
     
     def return_chatgpt_conversation(self):
         return self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')
@@ -175,6 +214,7 @@ class ChatGPTAutomator:
         """ :return: the text of the last chatgpt response """
         print("start return_last_response")
         try:
+            time.sleep(2)
             WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'main div[data-message-author-role="assistant"]')))
             # time.sleep(2)
             response_elements = self.driver.find_elements(by=By.CSS_SELECTOR, value='main div[data-message-author-role="assistant"]')

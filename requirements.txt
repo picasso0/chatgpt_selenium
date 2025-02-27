@@ -8,3 +8,5 @@ python-multipart
 undetected_chromedriver
 webdriver_manager
 fake-useragent
+pika
+requests
